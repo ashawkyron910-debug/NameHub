@@ -1,11 +1,17 @@
--- NameHub · Arsenal build 2026-08-23T17:46:23.644Z
-print("[NameHub] Boot arsenal 2026-08-23T17:46:23.644Z")
+-- NameHub · Arsenal build 2026-08-23T17:54:23.690Z
+print("[NameHub] Boot arsenal 2026-08-23T17:54:23.690Z")
 --[[
 	NameHub — Arsenal only (Aim Assist / ESP / Movement)
-	Place in StarterPlayer > StarterPlayerScripts.
-	Loading screen: upload NameHubLogo.png as a Roblox Image, then set
-	CONFIG.LoadingImageId to "rbxassetid://YOUR_ID".
 ]]
+
+warn("[NameHub] Script file running — PlaceId " .. tostring(game.PlaceId))
+pcall(function()
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "NameHub",
+		Text = "Loading — press Insert or click NH (left)",
+		Duration = 10,
+	})
+end)
 
 local ARSENAL_PLACE_ID = 286090429
 
@@ -123,12 +129,12 @@ local HttpService = game:GetService("HttpService")
 if game.PlaceId ~= ARSENAL_PLACE_ID then
 	warn(
 		string.format(
-			"[NameHub] Arsenal only — this build does not support PlaceId %s (%s).",
+			"[NameHub] Expected Arsenal PlaceId %s — got %s (%s). Continuing anyway.",
+			tostring(ARSENAL_PLACE_ID),
 			tostring(game.PlaceId),
 			game.Name
 		)
 	)
-	return
 end
 
 local localPlayer = Players.LocalPlayer
@@ -944,6 +950,22 @@ menuFrame.Active = true
 menuFrame.Selectable = false
 menuFrame:SetAttribute("ThemeRole", "Background")
 menuFrame.Parent = screenGui
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "NameHubToggle"
+toggleButton.Size = UDim2.fromOffset(52, 52)
+toggleButton.Position = UDim2.new(0, 12, 0.5, -26)
+toggleButton.BackgroundColor3 = THEME.Accent
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 14
+toggleButton.Text = "NH ▶"
+toggleButton.ZIndex = 1000
+toggleButton.AutoButtonColor = true
+toggleButton.Parent = screenGui
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = toggleButton
 
 local menuCorner = Instance.new("UICorner")
 menuCorner.CornerRadius = UDim.new(0, 10)
@@ -1949,6 +1971,10 @@ end
 local function setMenuVisible(visible)
 	menuOpen = visible
 	menuFrame.Visible = visible
+	if toggleButton then
+		toggleButton.Text = if visible then "NH ✕" else "NH ▶"
+		toggleButton.BackgroundColor3 = if visible then THEME.Accent else THEME.Topbar
+	end
 	forceMenuCursor(visible)
 	if visible then
 		-- Re-parent in case the game wiped PlayerGui / CoreGui children
@@ -1962,6 +1988,11 @@ end
 
 closeButton.MouseButton1Click:Connect(function()
 	setMenuVisible(false)
+end)
+
+toggleButton.MouseButton1Click:Connect(function()
+	setMenuVisible(not menuOpen)
+	notify("Menu", if menuOpen then "Opened" else "Closed")
 end)
 
 do
@@ -2760,7 +2791,7 @@ end
 
 selectTab("Main")
 setMenuVisible(true)
-print("[NameHub] Menu ready — Insert to toggle")
+print("[NameHub] Menu ready — click green NH (left) or press Insert")
 
 local function bootstrapGameplay()
 local function aimShouldLock()
