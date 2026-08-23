@@ -1,5 +1,5 @@
--- NameHub · Arsenal build 2026-08-23T17:54:23.690Z
-print("[NameHub] Boot arsenal 2026-08-23T17:54:23.690Z")
+-- NameHub · Arsenal build 2026-08-23T19:33:19.436Z
+print("[NameHub] Boot arsenal 2026-08-23T19:33:19.436Z")
 --[[
 	NameHub — Arsenal only (Aim Assist / ESP / Movement)
 ]]
@@ -941,7 +941,7 @@ local menuFrame = Instance.new("Frame")
 menuFrame.Name = "RayfieldStyleMenu"
 menuFrame.AnchorPoint = Vector2.new(0, 0.5)
 menuFrame.Position = UDim2.new(0, 24, 0.5, 0)
-menuFrame.Size = UDim2.fromOffset(340, 520)
+menuFrame.Size = UDim2.fromOffset(420, 520)
 menuFrame.BackgroundColor3 = THEME.Background
 menuFrame.BorderSizePixel = 0
 menuFrame.ZIndex = 50
