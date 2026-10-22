@@ -29,15 +29,15 @@ local CONFIG = {
 }
 
 local THEME = {
-	Background = Color3.fromRGB(25, 27, 29),
-	Topbar = Color3.fromRGB(32, 34, 37),
-	Element = Color3.fromRGB(35, 37, 40),
-	Accent = Color3.fromRGB(239, 68, 68),
-	Text = Color3.fromRGB(240, 240, 240),
-	SubText = Color3.fromRGB(160, 160, 165),
-	Muted = Color3.fromRGB(130, 132, 140),
-	Border = Color3.fromRGB(55, 55, 60),
-	ToggleOff = Color3.fromRGB(55, 58, 64),
+	Background = Color3.fromRGB(16, 16, 18),
+	Topbar = Color3.fromRGB(12, 12, 14),
+	Element = Color3.fromRGB(22, 22, 25),
+	Accent = Color3.fromRGB(230, 55, 85),
+	Text = Color3.fromRGB(232, 232, 236),
+	SubText = Color3.fromRGB(118, 116, 130),
+	Muted = Color3.fromRGB(118, 116, 130),
+	Border = Color3.fromRGB(48, 48, 54),
+	ToggleOff = Color3.fromRGB(60, 60, 65),
 }
 
 local Players = game:GetService("Players")
@@ -77,7 +77,8 @@ pcall(function()
 end)
 
 local scriptAlive = true
-local menuOpen = true
+local menuOpen = false
+local uiLoading = true
 
 local function notify(title, detail)
 	pcall(function()
@@ -140,252 +141,179 @@ espHost.Parent = screenGui
 
 local menuFrame = Instance.new("Frame")
 menuFrame.Name = "NameHubMenu"
-menuFrame.AnchorPoint = Vector2.new(0, 0.5)
-menuFrame.Position = UDim2.new(0, 24, 0.5, 0)
-menuFrame.Size = UDim2.fromOffset(420, 360)
+menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+menuFrame.Position = UDim2.fromScale(0.5, 0.5)
+menuFrame.Size = UDim2.fromOffset(732, 340)
 menuFrame.BackgroundColor3 = THEME.Background
 menuFrame.BorderSizePixel = 0
+menuFrame.Visible = false
 menuFrame.ZIndex = 50
 menuFrame.Parent = screenGui
-
-local menuCorner = Instance.new("UICorner")
-menuCorner.CornerRadius = UDim.new(0, 10)
-menuCorner.Parent = menuFrame
-
 local menuStroke = Instance.new("UIStroke")
 menuStroke.Color = THEME.Border
-menuStroke.Transparency = 0.4
 menuStroke.Parent = menuFrame
 
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "NameHubToggle"
+toggleButton.Size = UDim2.fromOffset(36, 36)
+toggleButton.Position = UDim2.new(0, 12, 0.5, -18)
+toggleButton.BackgroundColor3 = THEME.Background
+toggleButton.TextColor3 = THEME.Accent
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 12
+toggleButton.Text = "NH"
+toggleButton.ZIndex = 1000
+toggleButton.AutoButtonColor = false
+toggleButton.Parent = screenGui
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Color = THEME.Border
+toggleStroke.Parent = toggleButton
+
 local topbar = Instance.new("Frame")
-topbar.Size = UDim2.new(1, 0, 0, 44)
+topbar.Size = UDim2.new(1, 0, 0, 46)
 topbar.BackgroundColor3 = THEME.Topbar
 topbar.BorderSizePixel = 0
 topbar.ZIndex = 51
 topbar.Parent = menuFrame
-local topCorner = Instance.new("UICorner")
-topCorner.CornerRadius = UDim.new(0, 10)
-topCorner.Parent = topbar
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.BackgroundTransparency = 1
-titleLabel.Position = UDim2.fromOffset(14, 0)
-titleLabel.Size = UDim2.new(1, -60, 1, 0)
+titleLabel.Position = UDim2.fromOffset(16, 0)
+titleLabel.Size = UDim2.fromOffset(140, 46)
 titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Text = "NameHub · Rivals"
-titleLabel.TextColor3 = THEME.Text
+titleLabel.Text = "NAMEHUB"
+titleLabel.TextColor3 = THEME.Accent
 titleLabel.TextSize = 16
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.ZIndex = 52
 titleLabel.Parent = topbar
 
+local espTab = Instance.new("TextLabel")
+espTab.BackgroundTransparency = 1
+espTab.Position = UDim2.fromOffset(150, 0)
+espTab.Size = UDim2.fromOffset(50, 46)
+espTab.Font = Enum.Font.GothamBold
+espTab.Text = "ESP"
+espTab.TextColor3 = THEME.Text
+espTab.TextSize = 12
+espTab.ZIndex = 52
+espTab.Parent = topbar
+local espLine = Instance.new("Frame")
+espLine.AnchorPoint = Vector2.new(0.5, 1)
+espLine.Position = UDim2.new(0.5, 0, 1, 0)
+espLine.Size = UDim2.new(1, -16, 0, 2)
+espLine.BackgroundColor3 = THEME.Accent
+espLine.BorderSizePixel = 0
+espLine.ZIndex = 53
+espLine.Parent = espTab
+
+local tag = Instance.new("TextLabel")
+tag.BackgroundTransparency = 1
+tag.AnchorPoint = Vector2.new(1, 0.5)
+tag.Position = UDim2.new(1, -16, 0.5, 0)
+tag.Size = UDim2.fromOffset(80, 20)
+tag.Font = Enum.Font.Gotham
+tag.Text = "rivals"
+tag.TextColor3 = THEME.SubText
+tag.TextSize = 12
+tag.TextXAlignment = Enum.TextXAlignment.Right
+tag.ZIndex = 52
+tag.Parent = topbar
+
 local closeButton = Instance.new("TextButton")
 closeButton.AnchorPoint = Vector2.new(1, 0.5)
-closeButton.Position = UDim2.new(1, -10, 0.5, 0)
+closeButton.Position = UDim2.new(1, -96, 0.5, 0)
 closeButton.Size = UDim2.fromOffset(28, 28)
-closeButton.BackgroundColor3 = THEME.Element
-closeButton.Text = "✕"
-closeButton.TextColor3 = THEME.Text
+closeButton.BackgroundTransparency = 1
+closeButton.Text = "X"
+closeButton.TextColor3 = THEME.SubText
 closeButton.Font = Enum.Font.GothamBold
-closeButton.TextSize = 14
+closeButton.TextSize = 12
 closeButton.ZIndex = 52
 closeButton.Parent = topbar
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 6)
-closeCorner.Parent = closeButton
 
-local toggleButton = Instance.new("TextButton")
-toggleButton.Name = "NameHubToggle"
-toggleButton.Size = UDim2.fromOffset(52, 52)
-toggleButton.Position = UDim2.new(0, 12, 0.5, -26)
-toggleButton.BackgroundColor3 = THEME.Accent
-toggleButton.TextColor3 = Color3.new(1, 1, 1)
-toggleButton.Font = Enum.Font.GothamBold
-toggleButton.TextSize = 14
-toggleButton.Text = "NH ✕"
-toggleButton.ZIndex = 1000
-toggleButton.AutoButtonColor = true
-toggleButton.Parent = screenGui
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(1, 0)
-toggleCorner.Parent = toggleButton
-
-local tabBar = Instance.new("Frame")
-tabBar.Position = UDim2.fromOffset(12, 52)
-tabBar.Size = UDim2.new(1, -24, 0, 28)
-tabBar.BackgroundTransparency = 1
-tabBar.ZIndex = 51
-tabBar.Parent = menuFrame
-
-local pagesHost = Instance.new("Frame")
-pagesHost.Position = UDim2.fromOffset(0, 88)
-pagesHost.Size = UDim2.new(1, 0, 1, -96)
-pagesHost.BackgroundTransparency = 1
-pagesHost.ZIndex = 50
-pagesHost.Parent = menuFrame
-
-local pages= {}
-local tabButtons= {}
-local layoutOrder = 0
-
-local function nextOrder()
-	layoutOrder += 1
-	return layoutOrder
-end
-
-local function createPage(id)
-	local page = Instance.new("ScrollingFrame")
-	page.Name = "Page_" .. id
-	page.Size = UDim2.fromScale(1, 1)
-	page.BackgroundTransparency = 1
-	page.BorderSizePixel = 0
-	page.ScrollBarThickness = 6
-	page.ScrollBarImageColor3 = THEME.Accent
-	page.CanvasSize = UDim2.fromOffset(0, 0)
-	page.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	page.ScrollingDirection = Enum.ScrollingDirection.Y
-	page.Visible = false
-	page.ZIndex = 50
-	page.Parent = pagesHost
+local function makeColumn(x, title)
+	local col = Instance.new("Frame")
+	col.BackgroundColor3 = THEME.Element
+	col.BorderSizePixel = 0
+	col.Position = UDim2.fromOffset(x, 58)
+	col.Size = UDim2.new(0, 228, 1, -70)
+	col.ZIndex = 51
+	col.Parent = menuFrame
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = THEME.Border
+	stroke.Parent = col
+	local head = Instance.new("TextLabel")
+	head.BackgroundTransparency = 1
+	head.Position = UDim2.fromOffset(12, 10)
+	head.Size = UDim2.new(1, -24, 0, 18)
+	head.Font = Enum.Font.GothamBold
+	head.Text = string.upper(title)
+	head.TextColor3 = THEME.SubText
+	head.TextSize = 11
+	head.TextXAlignment = Enum.TextXAlignment.Left
+	head.ZIndex = 52
+	head.Parent = col
+	local body = Instance.new("Frame")
+	body.BackgroundTransparency = 1
+	body.Position = UDim2.fromOffset(12, 36)
+	body.Size = UDim2.new(1, -24, 1, -46)
+	body.ZIndex = 52
+	body.Parent = col
 	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 8)
+	layout.Padding = UDim.new(0, 4)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = page
-	local pad = Instance.new("UIPadding")
-	pad.PaddingTop = UDim.new(0, 8)
-	pad.PaddingBottom = UDim.new(0, 12)
-	pad.PaddingLeft = UDim.new(0, 12)
-	pad.PaddingRight = UDim.new(0, 12)
-	pad.Parent = page
-	pages[id] = page
-	return page
+	layout.Parent = body
+	return body
 end
 
-local selectedTab = "ESP"
-
-local function selectTab(id)
-	selectedTab = id
-	for name, page in pages do
-		page.Visible = name == id
-		if name == id then
-			page.CanvasPosition = Vector2.zero
-		end
-	end
-	for name, btn in tabButtons do
-		local active = name == id
-		btn.BackgroundColor3 = if active then THEME.Accent else THEME.ToggleOff
-		btn.TextColor3 = if active then Color3.new(1, 1, 1) else THEME.SubText
-	end
-end
-
-local function createTab(id, label)
-	createPage(id)
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(1, 0, 1, 0)
-	btn.BackgroundColor3 = THEME.ToggleOff
-	btn.BorderSizePixel = 0
-	btn.Font = Enum.Font.GothamBold
-	btn.Text = label
-	btn.TextColor3 = THEME.SubText
-	btn.TextSize = 11
-	btn.AutoButtonColor = false
-	btn.ZIndex = 52
-	btn.Parent = tabBar
-	local btnCorner = Instance.new("UICorner")
-	btnCorner.CornerRadius = UDim.new(0, 6)
-	btnCorner.Parent = btn
-	tabButtons[id] = btn
-	btn.MouseButton1Click:Connect(function()
-		selectTab(id)
-	end)
-end
-
-local function createSection(title)
-	local shell = Instance.new("Frame")
-	shell.Size = UDim2.new(1, 0, 0, 24)
-	shell.BackgroundTransparency = 1
-	shell.LayoutOrder = nextOrder()
-	shell.ZIndex = 52
-	shell.Parent = pages[selectedTab]
-	local label = Instance.new("TextLabel")
-	label.BackgroundTransparency = 1
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.Font = Enum.Font.GothamBold
-	label.Text = string.upper(title)
-	label.TextColor3 = THEME.Muted
-	label.TextSize = 10
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.ZIndex = 53
-	label.Parent = shell
-end
-
-local function createToggle(name, desc, initial, onChange)
-	local shell = Instance.new("Frame")
-	shell.Size = UDim2.new(1, 0, 0, 52)
-	shell.BackgroundColor3 = THEME.Element
-	shell.BorderSizePixel = 0
-	shell.LayoutOrder = nextOrder()
-	shell.ZIndex = 52
-	shell.Parent = pages[selectedTab]
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = shell
+local function createToggle(parent, name, initial, onChange)
+	local row = Instance.new("TextButton")
+	row.Size = UDim2.new(1, 0, 0, 28)
+	row.BackgroundTransparency = 1
+	row.BorderSizePixel = 0
+	row.Text = ""
+	row.AutoButtonColor = false
+	row.ZIndex = 53
+	row.Parent = parent
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.BackgroundTransparency = 1
-	nameLabel.Position = UDim2.fromOffset(12, 8)
-	nameLabel.Size = UDim2.new(1, -70, 0, 18)
-	nameLabel.Font = Enum.Font.GothamMedium
+	nameLabel.Size = UDim2.new(1, -24, 1, 0)
+	nameLabel.Font = Enum.Font.Gotham
 	nameLabel.Text = name
 	nameLabel.TextColor3 = THEME.Text
 	nameLabel.TextSize = 13
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-	nameLabel.ZIndex = 53
-	nameLabel.Parent = shell
-	local descLabel = Instance.new("TextLabel")
-	descLabel.BackgroundTransparency = 1
-	descLabel.Position = UDim2.fromOffset(12, 26)
-	descLabel.Size = UDim2.new(1, -70, 0, 18)
-	descLabel.Font = Enum.Font.Gotham
-	descLabel.Text = desc
-	descLabel.TextColor3 = THEME.Muted
-	descLabel.TextSize = 11
-	descLabel.TextXAlignment = Enum.TextXAlignment.Left
-	descLabel.ZIndex = 53
-	descLabel.Parent = shell
-	local toggleBg = Instance.new("Frame")
-	toggleBg.AnchorPoint = Vector2.new(1, 0.5)
-	toggleBg.Position = UDim2.new(1, -12, 0.5, 0)
-	toggleBg.Size = UDim2.fromOffset(44, 24)
-	toggleBg.BackgroundColor3 = if initial then THEME.Accent else THEME.ToggleOff
-	toggleBg.BorderSizePixel = 0
-	toggleBg.ZIndex = 53
-	toggleBg.Parent = shell
-	local toggleCorner = Instance.new("UICorner")
-	toggleCorner.CornerRadius = UDim.new(1, 0)
-	toggleCorner.Parent = toggleBg
-	local knob = Instance.new("Frame")
-	knob.Size = UDim2.fromOffset(18, 18)
-	knob.Position = if initial then UDim2.new(1, -21, 0.5, -9) else UDim2.fromOffset(3, 3)
-	knob.BackgroundColor3 = Color3.new(1, 1, 1)
-	knob.BorderSizePixel = 0
-	knob.ZIndex = 54
-	knob.Parent = toggleBg
-	local knobCorner = Instance.new("UICorner")
-	knobCorner.CornerRadius = UDim.new(1, 0)
-	knobCorner.Parent = knob
+	nameLabel.ZIndex = 54
+	nameLabel.Parent = row
+	local box = Instance.new("Frame")
+	box.AnchorPoint = Vector2.new(1, 0.5)
+	box.Position = UDim2.new(1, 0, 0.5, 0)
+	box.Size = UDim2.fromOffset(14, 14)
+	box.BackgroundColor3 = if initial then THEME.Accent else Color3.fromRGB(18, 18, 20)
+	box.BorderSizePixel = 0
+	box.ZIndex = 54
+	box.Parent = row
+	local boxStroke = Instance.new("UIStroke")
+	boxStroke.Color = if initial then THEME.Accent else THEME.Border
+	boxStroke.Parent = box
+	local mark = Instance.new("Frame")
+	mark.AnchorPoint = Vector2.new(0.5, 0.5)
+	mark.Position = UDim2.fromScale(0.5, 0.5)
+	mark.Size = UDim2.fromOffset(8, 8)
+	mark.BackgroundColor3 = Color3.fromRGB(16, 16, 18)
+	mark.BorderSizePixel = 0
+	mark.Visible = initial
+	mark.ZIndex = 55
+	mark.Parent = box
 	local enabled = initial
 	local function setValue(value)
 		enabled = value
-		toggleBg.BackgroundColor3 = if value then THEME.Accent else THEME.ToggleOff
-		knob.Position = if value then UDim2.new(1, -21, 0.5, -9) else UDim2.fromOffset(3, 3)
+		box.BackgroundColor3 = if value then THEME.Accent else Color3.fromRGB(18, 18, 20)
+		boxStroke.Color = if value then THEME.Accent else THEME.Border
+		mark.Visible = value
 	end
-	local hit = Instance.new("TextButton")
-	hit.Size = UDim2.fromScale(1, 1)
-	hit.BackgroundTransparency = 1
-	hit.Text = ""
-	hit.ZIndex = 55
-	hit.Parent = shell
-	hit.MouseButton1Click:Connect(function()
+	row.MouseButton1Click:Connect(function()
 		setValue(not enabled)
 		onChange(enabled)
 	end)
@@ -393,40 +321,88 @@ local function createToggle(name, desc, initial, onChange)
 end
 
 local function setMenuVisible(visible)
+	if uiLoading then
+		visible = false
+	end
 	menuOpen = visible
 	menuFrame.Visible = visible
-	toggleButton.Text = if visible then "NH ✕" else "NH ▶"
-	toggleButton.BackgroundColor3 = if visible then THEME.Accent else THEME.Topbar
+	toggleButton.Text = "NH"
+	toggleButton.TextColor3 = if visible then THEME.Accent else THEME.SubText
 end
 
 closeButton.MouseButton1Click:Connect(function()
+	if uiLoading then
+		return
+	end
 	setMenuVisible(false)
 end)
 
 toggleButton.MouseButton1Click:Connect(function()
+	if uiLoading then
+		return
+	end
 	setMenuVisible(not menuOpen)
 end)
 
-createTab("ESP", "ESP")
-selectTab("ESP")
-selectedTab = "ESP"
+do
+	local dragging = false
+	local dragStart = nil
+	local startPos = nil
+	topbar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = menuFrame.Position
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if not dragging or not dragStart or not startPos then
+			return
+		end
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			menuFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+end
 
-createSection("Player ESP")
-createToggle("Box ESP", "Corner boxes around players", CONFIG.ESPBoxes, function(v)
+local boxesCol = makeColumn(12, "Boxes")
+local linesCol = makeColumn(252, "Lines")
+local highlightCol = makeColumn(492, "Highlight")
+
+createToggle(boxesCol, "Box ESP", CONFIG.ESPBoxes, function(v)
 	CONFIG.ESPBoxes = v
 end)
-createToggle("Fill Box ESP", "Filled box behind corners", CONFIG.ESPFillBoxes, function(v)
+createToggle(boxesCol, "Fill Box ESP", CONFIG.ESPFillBoxes, function(v)
 	CONFIG.ESPFillBoxes = v
 end)
-createToggle("Tracer ESP", "Lines from screen center to players", CONFIG.ESPTracers, function(v)
+createToggle(linesCol, "Tracer ESP", CONFIG.ESPTracers, function(v)
 	CONFIG.ESPTracers = v
 end)
-createToggle("Skeleton ESP", "Bone lines on player rigs", CONFIG.ESPSkeleton, function(v)
+createToggle(linesCol, "Skeleton ESP", CONFIG.ESPSkeleton, function(v)
 	CONFIG.ESPSkeleton = v
 end)
-createToggle("Chams ESP", "Wall highlight on players", CONFIG.ESPChams, function(v)
+createToggle(highlightCol, "Chams ESP", CONFIG.ESPChams, function(v)
 	CONFIG.ESPChams = v
 end)
+
+local footer = Instance.new("TextLabel")
+footer.BackgroundTransparency = 1
+footer.AnchorPoint = Vector2.new(0, 1)
+footer.Position = UDim2.new(0, 16, 1, -8)
+footer.Size = UDim2.new(1, -32, 0, 16)
+footer.Font = Enum.Font.Gotham
+footer.TextSize = 11
+footer.TextXAlignment = Enum.TextXAlignment.Left
+footer.TextColor3 = THEME.SubText
+footer.Text = "Insert · rivals"
+footer.ZIndex = 52
+footer.Parent = menuFrame
 
 local function getCharacterPart(character, partName)
 	local part = character:FindFirstChild(partName)
@@ -827,6 +803,9 @@ UserInputService.InputBegan:Connect(function(input, _gameProcessed)
 		return
 	end
 	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == CONFIG.MenuKey then
+		if uiLoading then
+			return
+		end
 		setMenuVisible(not menuOpen)
 	end
 end)
@@ -845,9 +824,104 @@ pcall(function()
 	getgenv().NameHubRivalsUnload = unload
 end)
 
-setMenuVisible(true)
-notify("NameHub Rivals", "Loaded — Insert or NH button for menu")
-print("[NameHub Rivals] Loaded — ESP tab ready · Insert = menu")
+local loaderFrame = Instance.new("Frame")
+loaderFrame.Name = "Loader"
+loaderFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+loaderFrame.Position = UDim2.fromScale(0.5, 0.5)
+loaderFrame.Size = UDim2.fromOffset(460, 124)
+loaderFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 18)
+loaderFrame.BorderSizePixel = 0
+loaderFrame.ZIndex = 80
+loaderFrame.Parent = screenGui
+local loaderStroke = Instance.new("UIStroke")
+loaderStroke.Color = Color3.fromRGB(48, 48, 54)
+loaderStroke.Parent = loaderFrame
+local loaderLogo = Instance.new("TextLabel")
+loaderLogo.BackgroundTransparency = 1
+loaderLogo.Position = UDim2.fromOffset(18, 16)
+loaderLogo.Size = UDim2.new(1, -120, 0, 24)
+loaderLogo.Font = Enum.Font.GothamBold
+loaderLogo.TextSize = 18
+loaderLogo.TextXAlignment = Enum.TextXAlignment.Left
+loaderLogo.TextColor3 = Color3.fromRGB(230, 55, 85)
+loaderLogo.Text = "NAMEHUB"
+loaderLogo.ZIndex = 81
+loaderLogo.Parent = loaderFrame
+local loaderPercent = Instance.new("TextLabel")
+loaderPercent.BackgroundTransparency = 1
+loaderPercent.AnchorPoint = Vector2.new(1, 0)
+loaderPercent.Position = UDim2.new(1, -18, 0, 16)
+loaderPercent.Size = UDim2.fromOffset(80, 24)
+loaderPercent.Font = Enum.Font.GothamBold
+loaderPercent.TextSize = 18
+loaderPercent.TextXAlignment = Enum.TextXAlignment.Right
+loaderPercent.TextColor3 = Color3.fromRGB(232, 232, 236)
+loaderPercent.Text = "1%"
+loaderPercent.ZIndex = 81
+loaderPercent.Parent = loaderFrame
+local loaderStatus = Instance.new("TextLabel")
+loaderStatus.BackgroundTransparency = 1
+loaderStatus.Position = UDim2.fromOffset(18, 44)
+loaderStatus.Size = UDim2.new(1, -36, 0, 18)
+loaderStatus.Font = Enum.Font.Gotham
+loaderStatus.TextSize = 13
+loaderStatus.TextXAlignment = Enum.TextXAlignment.Left
+loaderStatus.TextColor3 = Color3.fromRGB(118, 116, 130)
+loaderStatus.Text = "loading"
+loaderStatus.ZIndex = 81
+loaderStatus.Parent = loaderFrame
+local loaderTrack = Instance.new("Frame")
+loaderTrack.BackgroundColor3 = Color3.fromRGB(30, 30, 34)
+loaderTrack.BorderSizePixel = 0
+loaderTrack.Position = UDim2.fromOffset(18, 78)
+loaderTrack.Size = UDim2.new(1, -36, 0, 8)
+loaderTrack.ZIndex = 81
+loaderTrack.Parent = loaderFrame
+local loaderFill = Instance.new("Frame")
+loaderFill.BackgroundColor3 = Color3.fromRGB(230, 55, 85)
+loaderFill.BorderSizePixel = 0
+loaderFill.Size = UDim2.new(0.01, 0, 1, 0)
+loaderFill.ZIndex = 82
+loaderFill.Parent = loaderTrack
+local loaderHint = Instance.new("TextLabel")
+loaderHint.BackgroundTransparency = 1
+loaderHint.Position = UDim2.fromOffset(18, 94)
+loaderHint.Size = UDim2.new(1, -36, 0, 16)
+loaderHint.Font = Enum.Font.Gotham
+loaderHint.TextSize = 11
+loaderHint.TextXAlignment = Enum.TextXAlignment.Left
+loaderHint.TextColor3 = Color3.fromRGB(118, 116, 130)
+loaderHint.Text = "rivals"
+loaderHint.ZIndex = 81
+loaderHint.Parent = loaderFrame
+
+setMenuVisible(false)
+print("[NameHub Rivals] Loading")
+task.spawn(function()
+	for step = 1, 100 do
+		if not scriptAlive then
+			return
+		end
+		loaderPercent.Text = tostring(step) .. "%"
+		loaderFill.Size = UDim2.new(step / 100, 0, 1, 0)
+		if step < 35 then
+			loaderStatus.Text = "loading"
+		elseif step < 70 then
+			loaderStatus.Text = "preparing visuals"
+		elseif step < 100 then
+			loaderStatus.Text = "starting"
+		else
+			loaderStatus.Text = "ready"
+		end
+		task.wait(0.018)
+	end
+	uiLoading = false
+	if loaderFrame then
+		loaderFrame:Destroy()
+	end
+	setMenuVisible(true)
+	notify("NameHub Rivals", "Insert opens the menu")
+end)
 
 local HttpService = game:GetService("HttpService")
 
