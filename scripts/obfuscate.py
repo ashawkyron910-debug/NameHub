@@ -46,29 +46,82 @@ def build_stub(encoded: str, key: str) -> str:
     part_literals = ",\n  ".join(lua_string_literal(p) for p in parts)
     key_lit = lua_string_literal(key)
     return f"""-- NameHub protected build (do not edit)
+warn("[NameHub] starting")
 return (function(K)
-  local bit32 = bit32 or bit
+  local bxor = (bit32 and bit32.bxor) or (bit and bit.bxor)
+  if not bxor then
+    function bxor(a, b)
+      local r, p = 0, 1
+      for _ = 1, 8 do
+        if a % 2 ~= b % 2 then
+          r = r + p
+        end
+        a = math.floor(a / 2)
+        b = math.floor(b / 2)
+        p = p * 2
+      end
+      return r
+    end
+  end
   local function xor_bytes(data, key)
     local out = {{}}
     local klen = #key
     for i = 1, #data do
       local b = string.byte(data, i)
       local kb = string.byte(key, ((i - 1) % klen) + 1)
-      out[i] = string.char(bit32.bxor(b, kb))
+      out[i] = string.char(bxor(b, kb))
+    end
+    return table.concat(out)
+  end
+  local function b64decode(data)
+    local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local map = {{}}
+    for i = 1, #chars do
+      map[string.sub(chars, i, i)] = i - 1
+    end
+    data = string.gsub(data, "%s", "")
+    local out = {{}}
+    local n = 1
+    for i = 1, #data, 4 do
+      local a = map[string.sub(data, i, i)] or 0
+      local b = map[string.sub(data, i + 1, i + 1)] or 0
+      local cch = string.sub(data, i + 2, i + 2)
+      local dch = string.sub(data, i + 3, i + 3)
+      local c = map[cch]
+      local d = map[dch]
+      local triple = a * 262144 + b * 4096 + (c or 0) * 64 + (d or 0)
+      out[n] = string.char(math.floor(triple / 65536) % 256)
+      n = n + 1
+      if cch ~= "=" and c ~= nil then
+        out[n] = string.char(math.floor(triple / 256) % 256)
+        n = n + 1
+      end
+      if dch ~= "=" and d ~= nil then
+        out[n] = string.char(triple % 256)
+        n = n + 1
+      end
     end
     return table.concat(out)
   end
   local b64 = table.concat({{
   {part_literals}
   }})
-  local raw = game:GetService("HttpService"):Base64Decode(b64)
-  local src = xor_bytes(raw, K)
-  local loader = loadstring or load
-  local fn, err = loader(src)
-  if not fn then
-    error("NameHub load failed: " .. tostring(err))
+  local ok, err = pcall(function()
+    local raw = b64decode(b64)
+    local src = xor_bytes(raw, K)
+    local loader = loadstring or load
+    if type(loader) ~= "function" then
+      error("loadstring is missing")
+    end
+    local fn, loadErr = loader(src)
+    if not fn then
+      error(tostring(loadErr))
+    end
+    fn()
+  end)
+  if not ok then
+    warn("[NameHub] load failed: " .. tostring(err))
   end
-  return fn()
 end)({key_lit})
 """
 
