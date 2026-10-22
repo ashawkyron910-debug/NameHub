@@ -50,13 +50,15 @@ jobs:
               "source/dinosim/script.lua": "🦖 **Dino Sim** — source",
               "rivals/script.lua": "⚔️ **Rivals** — free",
               "source/rivals/script.lua": "⚔️ **Rivals** — source",
+              "animeastral/script.lua": "✨ **Anime Astral** — free",
+              "source/animeastral/script.lua": "✨ **Anime Astral** — source",
               "premium/script.lua": "⭐ **Premium Hub** — release build",
               "source/premium/script.lua": "⭐ **Premium Hub** — source publish",
           }
           touched = []
           for path in files:
               norm = path.replace("\\", "/")
-              for key, label in labels.items():
+              for key, label in sorted(labels.items(), key=lambda item: len(item[0]), reverse=True):
                   if norm == key or norm.endswith("/" + key):
                       if label not in touched:
                           touched.append(label)
