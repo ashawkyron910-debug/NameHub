@@ -23,14 +23,14 @@ local CONFIG = {
 }
 
 local THEME = {
-	Background = Color3.fromRGB(25, 27, 29),
-	Topbar = Color3.fromRGB(32, 34, 37),
-	Element = Color3.fromRGB(35, 37, 40),
-	Accent = Color3.fromRGB(16, 185, 129),
-	Text = Color3.fromRGB(240, 240, 240),
-	SubText = Color3.fromRGB(160, 160, 165),
-	Stroke = Color3.fromRGB(55, 55, 60),
-	Success = Color3.fromRGB(60, 180, 100),
+	Background = Color3.fromRGB(16, 16, 18),
+	Topbar = Color3.fromRGB(12, 12, 14),
+	Element = Color3.fromRGB(22, 22, 25),
+	Accent = Color3.fromRGB(230, 55, 85),
+	Text = Color3.fromRGB(232, 232, 236),
+	SubText = Color3.fromRGB(118, 116, 130),
+	Stroke = Color3.fromRGB(48, 48, 54),
+	Success = Color3.fromRGB(230, 55, 85),
 }
 
 local Players = game:GetService("Players")
@@ -72,6 +72,7 @@ end)
 
 local scriptAlive = true
 local menuOpen = false
+local uiLoading = true
 local farmSessionDiamonds = 0
 local farmSessionStarts = 0
 local lastDiamondBalance= nil
@@ -184,6 +185,9 @@ local function protectGui(gui)
 end
 
 local function setMenuVisible(visible)
+	if uiLoading then
+		visible = false
+	end
 	menuOpen = visible
 	if menuFrame then
 		menuFrame.Visible = visible
@@ -387,47 +391,54 @@ local function startDiamondFarmLoop()
 	end)
 end
 
+local loaderFrame
+local loadPercent
+local loadFill
+local loadStatus
+
 local function createToggle(parent, label, getter, setter)
 	local row = Instance.new("TextButton")
 	row.AutoButtonColor = false
-	row.BackgroundColor3 = THEME.Element
+	row.BackgroundTransparency = 1
 	row.BorderSizePixel = 0
-	row.Size = UDim2.new(1, -2, 0, 34)
+	row.Size = UDim2.new(1, 0, 0, 28)
 	row.Text = ""
 	row.Parent = parent
 
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 6)
-	corner.Parent = row
+	local textLabel = Instance.new("TextLabel")
+	textLabel.BackgroundTransparency = 1
+	textLabel.Size = UDim2.new(1, -28, 1, 0)
+	textLabel.Font = Enum.Font.Gotham
+	textLabel.TextSize = 13
+	textLabel.TextXAlignment = Enum.TextXAlignment.Left
+	textLabel.TextColor3 = THEME.Text
+	textLabel.Text = label
+	textLabel.Parent = row
 
-	local text = Instance.new("TextLabel")
-	text.BackgroundTransparency = 1
-	text.Size = UDim2.new(1, -84, 1, 0)
-	text.Position = UDim2.fromOffset(12, 0)
-	text.Font = Enum.Font.GothamMedium
-	text.TextSize = 14
-	text.TextXAlignment = Enum.TextXAlignment.Left
-	text.TextColor3 = THEME.Text
-	text.Text = label
-	text.Parent = row
+	local box = Instance.new("Frame")
+	box.AnchorPoint = Vector2.new(1, 0.5)
+	box.Position = UDim2.new(1, 0, 0.5, 0)
+	box.Size = UDim2.fromOffset(14, 14)
+	box.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
+	box.BorderSizePixel = 0
+	box.Parent = row
+	local boxStroke = Instance.new("UIStroke")
+	boxStroke.Color = THEME.Stroke
+	boxStroke.Thickness = 1
+	boxStroke.Parent = box
 
-	local badge = Instance.new("TextLabel")
-	badge.BackgroundColor3 = THEME.Stroke
-	badge.BorderSizePixel = 0
-	badge.Size = UDim2.fromOffset(56, 22)
-	badge.Position = UDim2.new(1, -68, 0.5, -11)
-	badge.Font = Enum.Font.GothamBold
-	badge.TextSize = 12
-	badge.TextColor3 = THEME.Text
-	badge.Parent = row
-	local badgeCorner = Instance.new("UICorner")
-	badgeCorner.CornerRadius = UDim.new(1, 0)
-	badgeCorner.Parent = badge
+	local mark = Instance.new("Frame")
+	mark.AnchorPoint = Vector2.new(0.5, 0.5)
+	mark.Position = UDim2.fromScale(0.5, 0.5)
+	mark.Size = UDim2.fromOffset(8, 8)
+	mark.BackgroundColor3 = THEME.Accent
+	mark.BorderSizePixel = 0
+	mark.Parent = box
 
 	local function paint()
 		local on = getter()
-		badge.Text = if on then "ON" else "OFF"
-		badge.BackgroundColor3 = if on then THEME.Success else THEME.Stroke
+		mark.Visible = on
+		boxStroke.Color = if on then THEME.Accent else THEME.Stroke
 	end
 
 	row.MouseButton1Click:Connect(function()
@@ -435,6 +446,122 @@ local function createToggle(parent, label, getter, setter)
 		paint()
 	end)
 	paint()
+end
+
+local function makeColumn(parent, x, title)
+	local col = Instance.new("Frame")
+	col.BackgroundColor3 = THEME.Element
+	col.BorderSizePixel = 0
+	col.Position = UDim2.fromOffset(x, 58)
+	col.Size = UDim2.new(0, 228, 1, -70)
+	col.Parent = parent
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = THEME.Stroke
+	stroke.Thickness = 1
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Parent = col
+
+	local head = Instance.new("TextLabel")
+	head.BackgroundTransparency = 1
+	head.Size = UDim2.new(1, -24, 0, 18)
+	head.Position = UDim2.fromOffset(12, 10)
+	head.Font = Enum.Font.GothamBold
+	head.TextSize = 11
+	head.TextXAlignment = Enum.TextXAlignment.Left
+	head.TextColor3 = THEME.SubText
+	head.Text = string.upper(title)
+	head.Parent = col
+
+	local body = Instance.new("Frame")
+	body.BackgroundTransparency = 1
+	body.BorderSizePixel = 0
+	body.Position = UDim2.fromOffset(12, 36)
+	body.Size = UDim2.new(1, -24, 1, -46)
+	body.Parent = col
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 4)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = body
+	return body
+end
+
+local function buildLoader()
+	loaderFrame = Instance.new("Frame")
+	loaderFrame.Name = "Loader"
+	loaderFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	loaderFrame.Position = UDim2.fromScale(0.5, 0.5)
+	loaderFrame.Size = UDim2.fromOffset(460, 124)
+	loaderFrame.BackgroundColor3 = THEME.Background
+	loaderFrame.BorderSizePixel = 0
+	loaderFrame.ZIndex = 50
+	loaderFrame.Parent = screenGui
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = THEME.Stroke
+	stroke.Parent = loaderFrame
+
+	local logo = Instance.new("TextLabel")
+	logo.BackgroundTransparency = 1
+	logo.Position = UDim2.fromOffset(18, 16)
+	logo.Size = UDim2.new(1, -120, 0, 24)
+	logo.Font = Enum.Font.GothamBold
+	logo.TextSize = 18
+	logo.TextXAlignment = Enum.TextXAlignment.Left
+	logo.TextColor3 = THEME.Accent
+	logo.Text = "NAMEHUB"
+	logo.ZIndex = 51
+	logo.Parent = loaderFrame
+
+	loadPercent = Instance.new("TextLabel")
+	loadPercent.BackgroundTransparency = 1
+	loadPercent.AnchorPoint = Vector2.new(1, 0)
+	loadPercent.Position = UDim2.new(1, -18, 0, 16)
+	loadPercent.Size = UDim2.fromOffset(80, 24)
+	loadPercent.Font = Enum.Font.GothamBold
+	loadPercent.TextSize = 18
+	loadPercent.TextXAlignment = Enum.TextXAlignment.Right
+	loadPercent.TextColor3 = THEME.Text
+	loadPercent.Text = "1%"
+	loadPercent.ZIndex = 51
+	loadPercent.Parent = loaderFrame
+
+	loadStatus = Instance.new("TextLabel")
+	loadStatus.BackgroundTransparency = 1
+	loadStatus.Position = UDim2.fromOffset(18, 44)
+	loadStatus.Size = UDim2.new(1, -36, 0, 18)
+	loadStatus.Font = Enum.Font.Gotham
+	loadStatus.TextSize = 13
+	loadStatus.TextXAlignment = Enum.TextXAlignment.Left
+	loadStatus.TextColor3 = THEME.SubText
+	loadStatus.Text = "loading"
+	loadStatus.ZIndex = 51
+	loadStatus.Parent = loaderFrame
+
+	local track = Instance.new("Frame")
+	track.BackgroundColor3 = Color3.fromRGB(30, 30, 34)
+	track.BorderSizePixel = 0
+	track.Position = UDim2.fromOffset(18, 78)
+	track.Size = UDim2.new(1, -36, 0, 8)
+	track.ZIndex = 51
+	track.Parent = loaderFrame
+
+	loadFill = Instance.new("Frame")
+	loadFill.BackgroundColor3 = THEME.Accent
+	loadFill.BorderSizePixel = 0
+	loadFill.Size = UDim2.new(0.01, 0, 1, 0)
+	loadFill.ZIndex = 52
+	loadFill.Parent = track
+
+	local hint = Instance.new("TextLabel")
+	hint.BackgroundTransparency = 1
+	hint.Position = UDim2.fromOffset(18, 94)
+	hint.Size = UDim2.new(1, -36, 0, 16)
+	hint.Font = Enum.Font.Gotham
+	hint.TextSize = 11
+	hint.TextXAlignment = Enum.TextXAlignment.Left
+	hint.TextColor3 = THEME.SubText
+	hint.Text = "dinosaur simulator"
+	hint.ZIndex = 51
+	hint.Parent = loaderFrame
 end
 
 local function buildMenu()
@@ -452,123 +579,141 @@ local function buildMenu()
 
 	toggleButton = Instance.new("TextButton")
 	toggleButton.Name = "Toggle"
-	toggleButton.Size = UDim2.fromOffset(52, 52)
-	toggleButton.Position = UDim2.new(0, 12, 0.5, -26)
-	toggleButton.BackgroundColor3 = THEME.Accent
-	toggleButton.TextColor3 = Color3.new(1, 1, 1)
+	toggleButton.Size = UDim2.fromOffset(36, 36)
+	toggleButton.Position = UDim2.new(0, 12, 0.5, -18)
+	toggleButton.BackgroundColor3 = THEME.Background
+	toggleButton.TextColor3 = THEME.Accent
 	toggleButton.Font = Enum.Font.GothamBold
-	toggleButton.TextSize = 14
-	toggleButton.Text = "NH ▶"
+	toggleButton.TextSize = 12
+	toggleButton.Text = "NH"
 	toggleButton.ZIndex = 1000
-	toggleButton.AutoButtonColor = true
+	toggleButton.AutoButtonColor = false
 	toggleButton.Parent = screenGui
-	local toggleCorner = Instance.new("UICorner")
-	toggleCorner.CornerRadius = UDim.new(1, 0)
-	toggleCorner.Parent = toggleButton
+	local toggleStroke = Instance.new("UIStroke")
+	toggleStroke.Color = THEME.Stroke
+	toggleStroke.Parent = toggleButton
 	toggleButton.MouseButton1Click:Connect(toggleMenu)
 
 	menuFrame = Instance.new("Frame")
 	menuFrame.Name = "Main"
+	menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 	menuFrame.BackgroundColor3 = THEME.Background
 	menuFrame.BorderSizePixel = 0
-	menuFrame.Size = UDim2.fromOffset(420, 360)
-	menuFrame.Position = UDim2.new(0.5, -210, 0.5, -180)
+	menuFrame.Size = UDim2.fromOffset(732, 340)
+	menuFrame.Position = UDim2.fromScale(0.5, 0.5)
 	menuFrame.Visible = false
 	menuFrame.ZIndex = 10
 	menuFrame.Parent = screenGui
-
-	local menuCorner = Instance.new("UICorner")
-	menuCorner.CornerRadius = UDim.new(0, 10)
-	menuCorner.Parent = menuFrame
+	local menuStroke = Instance.new("UIStroke")
+	menuStroke.Color = THEME.Stroke
+	menuStroke.Parent = menuFrame
 
 	local topbar = Instance.new("Frame")
 	topbar.BackgroundColor3 = THEME.Topbar
 	topbar.BorderSizePixel = 0
-	topbar.Size = UDim2.new(1, 0, 0, 42)
+	topbar.Size = UDim2.new(1, 0, 0, 46)
+	topbar.ZIndex = 11
 	topbar.Parent = menuFrame
-	local topCorner = Instance.new("UICorner")
-	topCorner.CornerRadius = UDim.new(0, 10)
-	topCorner.Parent = topbar
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(1, -20, 1, 0)
-	title.Position = UDim2.fromOffset(14, 0)
+	title.Size = UDim2.fromOffset(140, 46)
+	title.Position = UDim2.fromOffset(16, 0)
 	title.Font = Enum.Font.GothamBold
 	title.TextSize = 16
 	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.TextColor3 = THEME.Text
-	title.Text = "NameHub · Dinosaur Simulator"
+	title.TextColor3 = THEME.Accent
+	title.Text = "NAMEHUB"
+	title.ZIndex = 12
 	title.Parent = topbar
+
+	local tag = Instance.new("TextLabel")
+	tag.BackgroundTransparency = 1
+	tag.AnchorPoint = Vector2.new(1, 0.5)
+	tag.Position = UDim2.new(1, -16, 0.5, 0)
+	tag.Size = UDim2.fromOffset(160, 20)
+	tag.Font = Enum.Font.Gotham
+	tag.TextSize = 12
+	tag.TextXAlignment = Enum.TextXAlignment.Right
+	tag.TextColor3 = THEME.SubText
+	tag.Text = "dinosaur sim"
+	tag.ZIndex = 12
+	tag.Parent = topbar
+
+	local farmCol = makeColumn(menuFrame, 12, "Farm")
+	local survivalCol = makeColumn(menuFrame, 252, "Survival")
+	local sessionCol = makeColumn(menuFrame, 492, "Session")
 
 	statusLabel = Instance.new("TextLabel")
 	statusLabel.BackgroundTransparency = 1
-	statusLabel.Size = UDim2.new(1, -24, 0, 18)
-	statusLabel.Position = UDim2.fromOffset(12, 50)
+	statusLabel.Size = UDim2.new(1, 0, 0, 32)
 	statusLabel.Font = Enum.Font.Gotham
-	statusLabel.TextSize = 13
+	statusLabel.TextSize = 12
+	statusLabel.TextWrapped = true
 	statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+	statusLabel.TextYAlignment = Enum.TextYAlignment.Top
 	statusLabel.TextColor3 = THEME.SubText
-	statusLabel.Text = "🧪 Beta · Diamond farming only"
-	statusLabel.Parent = menuFrame
+	statusLabel.Text = "Beta · diamond farming only"
+	statusLabel.LayoutOrder = 10
+	statusLabel.Parent = farmCol
 
-	local body = Instance.new("Frame")
-	body.BackgroundTransparency = 1
-	body.BorderSizePixel = 0
-	body.Size = UDim2.new(1, -24, 1, -130)
-	body.Position = UDim2.fromOffset(12, 74)
-	body.Parent = menuFrame
-
-	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 8)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = body
-
-	createToggle(body, "Auto Diamond Farm", function()
+	createToggle(farmCol, "Auto Diamond Farm", function()
 		return CONFIG.DiamondFarmEnabled
 	end, function(on)
 		CONFIG.DiamondFarmEnabled = on
 		if on then
 			startDiamondFarmLoop()
-			statusLabel.Text = "💎 Diamond farm running…"
+			statusLabel.Text = "Diamond farm running"
 		else
 			statusLabel.Text = "Diamond farm paused"
 		end
 	end)
 
-	createToggle(body, "Auto Eat", function()
+	createToggle(survivalCol, "Auto Eat", function()
 		return CONFIG.AutoEatEnabled
 	end, function(on)
 		CONFIG.AutoEatEnabled = on
 	end)
 
-	createToggle(body, "Auto Drink", function()
+	createToggle(survivalCol, "Auto Drink", function()
 		return CONFIG.AutoDrinkEnabled
 	end, function(on)
 		CONFIG.AutoDrinkEnabled = on
 	end)
 
-	createToggle(body, "Anti AFK", function()
+	createToggle(survivalCol, "Anti AFK", function()
 		return CONFIG.AntiAfkEnabled
 	end, function(on)
 		CONFIG.AntiAfkEnabled = on
 	end)
 
 	statsLabel = Instance.new("TextLabel")
-	statsLabel.BackgroundColor3 = THEME.Element
-	statsLabel.BorderSizePixel = 0
-	statsLabel.Size = UDim2.new(1, -24, 0, 72)
-	statsLabel.Position = UDim2.new(0, 12, 1, -84)
-	statsLabel.Font = Enum.Font.Code
+	statsLabel.BackgroundTransparency = 1
+	statsLabel.Size = UDim2.new(1, 0, 0, 72)
+	statsLabel.Font = Enum.Font.Gotham
 	statsLabel.TextSize = 13
 	statsLabel.TextXAlignment = Enum.TextXAlignment.Left
 	statsLabel.TextYAlignment = Enum.TextYAlignment.Top
-	statsLabel.TextColor3 = THEME.SubText
+	statsLabel.TextColor3 = THEME.Text
 	statsLabel.Text = "Session farms: 0"
-	statsLabel.Parent = menuFrame
-	local statsCorner = Instance.new("UICorner")
-	statsCorner.CornerRadius = UDim.new(0, 6)
-	statsCorner.Parent = statsLabel
+	statsLabel.Parent = sessionCol
+
+	local footer = Instance.new("TextLabel")
+	footer.BackgroundTransparency = 1
+	footer.AnchorPoint = Vector2.new(0, 1)
+	footer.Position = UDim2.new(0, 16, 1, -8)
+	footer.Size = UDim2.new(1, -32, 0, 16)
+	footer.Font = Enum.Font.Gotham
+	footer.TextSize = 11
+	footer.TextXAlignment = Enum.TextXAlignment.Left
+	footer.TextColor3 = THEME.SubText
+	footer.Text = "Insert · dinosaur simulator"
+	footer.ZIndex = 12
+	footer.Parent = menuFrame
+
+	if uiLoading then
+		buildLoader()
+	end
 
 	refreshStatsText()
 end
@@ -600,6 +745,9 @@ local function bindMenuInput()
 		if not scriptAlive then
 			return
 		end
+		if uiLoading then
+			return
+		end
 		if input.UserInputType == Enum.UserInputType.Keyboard and isMenuKey(input.KeyCode) then
 			toggleMenu()
 		end
@@ -611,6 +759,9 @@ local function bindMenuInput()
 			function(_name, state, input)
 				if state ~= Enum.UserInputState.Begin then
 					return Enum.ContextActionResult.Pass
+				end
+				if uiLoading then
+					return Enum.ContextActionResult.Sink
 				end
 				if input.UserInputType == Enum.UserInputType.Keyboard and isMenuKey(input.KeyCode) then
 					toggleMenu()
@@ -642,15 +793,47 @@ end
 local bootOk, bootErr = pcall(function()
 	buildMenu()
 	bindMenuInput()
-	setMenuVisible(true)
+	setMenuVisible(false)
 end)
 
 if not bootOk then
+	uiLoading = false
 	warn("[NameHub DS] UI boot failed:", bootErr)
 	notify("NameHub DS Error", tostring(bootErr))
 else
-	print("[NameHub DS] UI ready — click green NH button or press Insert / Home / F4")
-	notify("NameHub DS", "Click green NH button (left) or Insert")
+	print("[NameHub DS] UI loading")
+	task.spawn(function()
+		for step = 1, 100 do
+			if not scriptAlive then
+				return
+			end
+			if loadPercent then
+				loadPercent.Text = tostring(step) .. "%"
+			end
+			if loadFill then
+				loadFill.Size = UDim2.new(step / 100, 0, 1, 0)
+			end
+			if loadStatus then
+				if step < 35 then
+					loadStatus.Text = "loading"
+				elseif step < 70 then
+					loadStatus.Text = "preparing farm"
+				elseif step < 100 then
+					loadStatus.Text = "starting"
+				else
+					loadStatus.Text = "ready"
+				end
+			end
+			task.wait(0.018)
+		end
+		uiLoading = false
+		if loaderFrame then
+			loaderFrame:Destroy()
+			loaderFrame = nil
+		end
+		setMenuVisible(true)
+		notify("NameHub DS", "Insert opens the menu")
+	end)
 end
 
 task.spawn(function()

@@ -89,14 +89,18 @@ def pack_file(source_path: Path, dest_path: Path, key: str) -> None:
 def main() -> int:
     key = pack_key()
     missing: list[str] = []
+    packed = 0
     for rel_src, rel_out in OUTPUTS:
         src = SOURCE / rel_src
         if not src.is_file():
             missing.append(rel_src)
             continue
         pack_file(src, ROOT / rel_out, key)
+        packed += 1
     if missing:
-        print("Missing source files:", ", ".join(missing), file=sys.stderr)
+        print("Skipping missing source files:", ", ".join(missing), file=sys.stderr)
+    if packed == 0:
+        print("No source files to pack", file=sys.stderr)
         return 1
     return 0
 
