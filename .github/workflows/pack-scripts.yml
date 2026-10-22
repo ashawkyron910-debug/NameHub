@@ -1,0 +1,35 @@
+name: Pack protected scripts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "source/**"
+      - "scripts/obfuscate.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pack Lua sources
+        env:
+          NAMEHUB_PACK_KEY: ${{ secrets.NAMEHUB_PACK_KEY }}
+        run: python3 scripts/obfuscate.py
+
+      - name: Commit protected builds
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add script.lua dahood/script.lua dinosim/script.lua rivals/script.lua
+          if git diff --staged --quiet; then
+            echo "No packed output changes."
+            exit 0
+          fi
+          git commit -m "build: pack protected scripts for release"
+          git push
