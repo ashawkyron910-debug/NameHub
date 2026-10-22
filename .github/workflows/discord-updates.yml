@@ -1,0 +1,94 @@
+name: Discord script update
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to NameHub #updates
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_UPDATES_WEBHOOK }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "DISCORD_UPDATES_WEBHOOK secret is not set"
+            exit 1
+          fi
+          python3 << 'PY'
+          import json
+          import os
+          import urllib.request
+
+          event_path = os.environ["GITHUB_EVENT_PATH"]
+          with open(event_path, encoding="utf-8") as f:
+              event = json.load(f)
+
+          head = event.get("head_commit") or {}
+          sha = str(head.get("id") or "")[:12]
+          message = str(head.get("message") or "Script update").splitlines()[0][:256]
+          author = (head.get("author") or {}).get("username") or "GitHub"
+          url = head.get("url") or event.get("compare") or ""
+
+          games = {
+              "script.lua": "🔫 Arsenal",
+              "dahood/script.lua": "🏚️ Da Hood",
+              "dinosim/script.lua": "🦖 Dino Sim",
+              "rivals/script.lua": "⚔️ Rivals",
+          }
+          touched = []
+          for commit in event.get("commits") or []:
+              for key in ("modified", "added", "removed"):
+                  for path in commit.get(key) or []:
+                      for suffix, label in games.items():
+                          if path == suffix or path.endswith("/" + suffix):
+                              if label not in touched:
+                                  touched.append(label)
+          if not touched:
+              touched = ["📜 NameHub scripts"]
+
+          files = []
+          for commit in event.get("commits") or []:
+              for key in ("modified", "added", "removed"):
+                  for path in commit.get(key) or []:
+                      if path not in files:
+                          files.append(path)
+          file_block = "\n".join(f"- `{p}`" for p in files[:8])
+          if len(files) > 8:
+              file_block += f"\n- _+{len(files) - 8} more_"
+
+          embed = {
+              "title": "📢 Script update",
+              "description": message,
+              "color": 0x3DDCFF,
+              "url": url or None,
+              "fields": [
+                  {"name": "Games", "value": "\n".join(touched), "inline": True},
+                  {"name": "Commit", "value": f"[`{sha}`]({url})" if url else f"`{sha}`", "inline": True},
+                  {"name": "Author", "value": author, "inline": True},
+              ],
+              "footer": {"text": "NameHub · GitHub"},
+          }
+          if file_block:
+              embed["fields"].append(
+                  {"name": "Files changed", "value": file_block, "inline": False}
+              )
+          embed["fields"].append(
+              {
+                  "name": "Get scripts",
+                  "value": "Use **Get Loader** in the loader channel when your executor is **Updated** on WEAO.",
+                  "inline": False,
+              }
+          )
+
+          payload = json.dumps({"embeds": [embed]}).encode("utf-8")
+          req = urllib.request.Request(
+              os.environ["DISCORD_WEBHOOK"],
+              data=payload,
+              headers={"Content-Type": "application/json", "User-Agent": "NameHub-GitHub-Action"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req, timeout=30) as resp:
+              print("Discord status", resp.status)
+          PY
