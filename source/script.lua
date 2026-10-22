@@ -257,6 +257,7 @@ local enabled = false
 local aimKeyHeld = false
 local mouse1Held = false
 local menuOpen = false
+local uiLoading = true
 local flyEnabled = false
 local noclipEnabled = false
 local silentAimEnabled = false
@@ -401,136 +402,92 @@ local function playNameHubLoadingScreen()
 	loadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	loadingGui.Parent = playerGui
 
-	local backdrop = Instance.new("Frame")
-	backdrop.Name = "Backdrop"
-	backdrop.Size = UDim2.fromScale(1, 1)
-	backdrop.BackgroundColor3 = Color3.fromRGB(6, 6, 8)
-	backdrop.BorderSizePixel = 0
-	backdrop.Parent = loadingGui
+	local card = Instance.new("Frame")
+	card.Name = "Loader"
+	card.AnchorPoint = Vector2.new(0.5, 0.5)
+	card.Position = UDim2.fromScale(0.5, 0.5)
+	card.Size = UDim2.fromOffset(460, 124)
+	card.BackgroundColor3 = Color3.fromRGB(16, 16, 18)
+	card.BorderSizePixel = 0
+	card.Parent = loadingGui
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(48, 48, 54)
+	stroke.Parent = card
 
-	local glow = Instance.new("Frame")
-	glow.Name = "Glow"
-	glow.AnchorPoint = Vector2.new(0.5, 0.5)
-	glow.Position = UDim2.new(0.5, 0, 0.42, 0)
-	glow.Size = UDim2.fromOffset(280, 280)
-	glow.BackgroundColor3 = Color3.fromRGB(60, 140, 255)
-	glow.BackgroundTransparency = 0.82
-	glow.BorderSizePixel = 0
-	glow.Parent = backdrop
-
-	local glowCorner = Instance.new("UICorner")
-	glowCorner.CornerRadius = UDim.new(1, 0)
-	glowCorner.Parent = glow
-
-	local logo = Instance.new("ImageLabel")
-	logo.Name = "Logo"
-	logo.AnchorPoint = Vector2.new(0.5, 0.5)
-	logo.Position = UDim2.new(0.5, 0, 0.38, 0)
-	logo.Size = UDim2.fromOffset(160, 160)
+	local logo = Instance.new("TextLabel")
 	logo.BackgroundTransparency = 1
-	logo.ScaleType = Enum.ScaleType.Fit
-	logo.Image = resolveLoadingImage()
-	logo.Parent = backdrop
-
-	if logo.Image ~= "" then
-		pcall(function()
-			ContentProvider:PreloadAsync({ logo })
-		end)
-	end
-
-	local brand = Instance.new("TextLabel")
-	brand.Name = "Brand"
-	brand.AnchorPoint = Vector2.new(0.5, 0)
-	brand.Position = UDim2.new(0.5, 0, 0.38, 95)
-	brand.Size = UDim2.fromOffset(320, 40)
-	brand.BackgroundTransparency = 1
-	brand.Font = Enum.Font.GothamBold
-	brand.Text = "NameHub"
-	brand.TextColor3 = Color3.fromRGB(230, 235, 245)
-	brand.TextSize = 34
-	brand.TextStrokeColor3 = Color3.fromRGB(40, 120, 255)
-	brand.TextStrokeTransparency = 0.65
-	brand.Parent = backdrop
-
-	local status = Instance.new("TextLabel")
-	status.Name = "Status"
-	status.AnchorPoint = Vector2.new(0.5, 0)
-	status.Position = UDim2.new(0.5, 0, 0.38, 135)
-	status.Size = UDim2.fromOffset(280, 20)
-	status.BackgroundTransparency = 1
-	status.Font = Enum.Font.Gotham
-	status.Text = "Loading..."
-	status.TextColor3 = Color3.fromRGB(140, 160, 200)
-	status.TextSize = 14
-	status.Parent = backdrop
+	logo.Position = UDim2.fromOffset(18, 16)
+	logo.Size = UDim2.new(1, -120, 0, 24)
+	logo.Font = Enum.Font.GothamBold
+	logo.TextSize = 18
+	logo.TextXAlignment = Enum.TextXAlignment.Left
+	logo.TextColor3 = Color3.fromRGB(230, 55, 85)
+	logo.Text = "NAMEHUB"
+	logo.Parent = card
 
 	local percentLabel = Instance.new("TextLabel")
-	percentLabel.Name = "Percent"
-	percentLabel.AnchorPoint = Vector2.new(0.5, 0)
-	percentLabel.Position = UDim2.new(0.5, 0, 0.72, 0)
-	percentLabel.Size = UDim2.fromOffset(200, 36)
 	percentLabel.BackgroundTransparency = 1
+	percentLabel.AnchorPoint = Vector2.new(1, 0)
+	percentLabel.Position = UDim2.new(1, -18, 0, 16)
+	percentLabel.Size = UDim2.fromOffset(80, 24)
 	percentLabel.Font = Enum.Font.GothamBold
-	percentLabel.Text = "100%"
-	percentLabel.TextColor3 = Color3.fromRGB(120, 180, 255)
-	percentLabel.TextSize = 28
-	percentLabel.Parent = backdrop
+	percentLabel.TextSize = 18
+	percentLabel.TextXAlignment = Enum.TextXAlignment.Right
+	percentLabel.TextColor3 = Color3.fromRGB(232, 232, 236)
+	percentLabel.Text = "1%"
+	percentLabel.Parent = card
 
-	local barBg = Instance.new("Frame")
-	barBg.Name = "BarBg"
-	barBg.AnchorPoint = Vector2.new(0.5, 0)
-	barBg.Position = UDim2.new(0.5, 0, 0.72, 44)
-	barBg.Size = UDim2.fromOffset(220, 6)
-	barBg.BackgroundColor3 = Color3.fromRGB(28, 30, 36)
-	barBg.BorderSizePixel = 0
-	barBg.Parent = backdrop
+	local status = Instance.new("TextLabel")
+	status.BackgroundTransparency = 1
+	status.Position = UDim2.fromOffset(18, 44)
+	status.Size = UDim2.new(1, -36, 0, 18)
+	status.Font = Enum.Font.Gotham
+	status.TextSize = 13
+	status.TextXAlignment = Enum.TextXAlignment.Left
+	status.TextColor3 = Color3.fromRGB(118, 116, 130)
+	status.Text = "loading"
+	status.Parent = card
 
-	local barBgCorner = Instance.new("UICorner")
-	barBgCorner.CornerRadius = UDim.new(1, 0)
-	barBgCorner.Parent = barBg
+	local track = Instance.new("Frame")
+	track.BackgroundColor3 = Color3.fromRGB(30, 30, 34)
+	track.BorderSizePixel = 0
+	track.Position = UDim2.fromOffset(18, 78)
+	track.Size = UDim2.new(1, -36, 0, 8)
+	track.Parent = card
+	local fill = Instance.new("Frame")
+	fill.BackgroundColor3 = Color3.fromRGB(230, 55, 85)
+	fill.BorderSizePixel = 0
+	fill.Size = UDim2.new(0.01, 0, 1, 0)
+	fill.Parent = track
 
-	local barFill = Instance.new("Frame")
-	barFill.Name = "BarFill"
-	barFill.Size = UDim2.fromScale(1, 1)
-	barFill.BackgroundColor3 = Color3.fromRGB(90, 160, 255)
-	barFill.BorderSizePixel = 0
-	barFill.Parent = barBg
+	local hint = Instance.new("TextLabel")
+	hint.BackgroundTransparency = 1
+	hint.Position = UDim2.fromOffset(18, 94)
+	hint.Size = UDim2.new(1, -36, 0, 16)
+	hint.Font = Enum.Font.Gotham
+	hint.TextSize = 11
+	hint.TextXAlignment = Enum.TextXAlignment.Left
+	hint.TextColor3 = Color3.fromRGB(118, 116, 130)
+	hint.Text = "arsenal"
+	hint.Parent = card
 
-	local barFillCorner = Instance.new("UICorner")
-	barFillCorner.CornerRadius = UDim.new(1, 0)
-	barFillCorner.Parent = barFill
-
-	local duration = math.max(CONFIG.LoadingDuration, 0.5)
-	local startTime = os.clock()
-	local currentPct = 100
-
-	while true do
-		local alpha = math.clamp((os.clock() - startTime) / duration, 0, 1)
-		local eased = 1 - (1 - alpha) ^ 2
-		currentPct = math.clamp(math.floor(100 - eased * 99 + 0.5), 1, 100)
-		percentLabel.Text = string.format("%d%%", currentPct)
-		barFill.Size = UDim2.fromScale(currentPct / 100, 1)
-		if alpha >= 1 then
+	for step = 1, 100 do
+		if not scriptAlive then
 			break
 		end
-		RunService.RenderStepped:Wait()
+		percentLabel.Text = tostring(step) .. "%"
+		fill.Size = UDim2.new(step / 100, 0, 1, 0)
+		if step < 30 then
+			status.Text = "loading"
+		elseif step < 60 then
+			status.Text = "preparing visuals"
+		elseif step < 100 then
+			status.Text = "starting"
+		else
+			status.Text = "ready"
+		end
+		task.wait(0.018)
 	end
-
-	percentLabel.Text = "1%"
-	barFill.Size = UDim2.fromScale(0.01, 1)
-	status.Text = "Ready"
-	task.wait(0.2)
-
-	local fadeInfo = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(backdrop, fadeInfo, { BackgroundTransparency = 1 }):Play()
-	TweenService:Create(glow, fadeInfo, { BackgroundTransparency = 1 }):Play()
-	TweenService:Create(logo, fadeInfo, { ImageTransparency = 1 }):Play()
-	TweenService:Create(brand, fadeInfo, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
-	TweenService:Create(status, fadeInfo, { TextTransparency = 1 }):Play()
-	TweenService:Create(percentLabel, fadeInfo, { TextTransparency = 1 }):Play()
-	TweenService:Create(barBg, fadeInfo, { BackgroundTransparency = 1 }):Play()
-	TweenService:Create(barFill, fadeInfo, { BackgroundTransparency = 1 }):Play()
-	task.wait(0.5)
 	loadingGui:Destroy()
 end
 
@@ -805,15 +762,15 @@ end
 
 local THEME_PRESETS = {
 	Midnight = {
-		Background = Color3.fromRGB(25, 27, 29),
-		Topbar = Color3.fromRGB(32, 34, 37),
-		Element = Color3.fromRGB(35, 37, 40),
-		ElementHover = Color3.fromRGB(42, 44, 48),
-		Accent = Color3.fromRGB(100, 120, 255),
-		Text = Color3.fromRGB(240, 240, 240),
-		SubText = Color3.fromRGB(160, 160, 165),
-		Stroke = Color3.fromRGB(55, 55, 60),
-		Success = Color3.fromRGB(60, 180, 100),
+		Background = Color3.fromRGB(16, 16, 18),
+		Topbar = Color3.fromRGB(12, 12, 14),
+		Element = Color3.fromRGB(22, 22, 25),
+		ElementHover = Color3.fromRGB(30, 30, 34),
+		Accent = Color3.fromRGB(230, 55, 85),
+		Text = Color3.fromRGB(232, 232, 236),
+		SubText = Color3.fromRGB(118, 116, 130),
+		Stroke = Color3.fromRGB(48, 48, 54),
+		Success = Color3.fromRGB(230, 55, 85),
 	},
 	Ocean = {
 		Background = Color3.fromRGB(12, 24, 36),
@@ -938,10 +895,10 @@ do
 end
 
 local menuFrame = Instance.new("Frame")
-menuFrame.Name = "RayfieldStyleMenu"
-menuFrame.AnchorPoint = Vector2.new(0, 0.5)
-menuFrame.Position = UDim2.new(0, 24, 0.5, 0)
-menuFrame.Size = UDim2.fromOffset(420, 520)
+menuFrame.Name = "NameHubMenu"
+menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+menuFrame.Position = UDim2.fromScale(0.5, 0.5)
+menuFrame.Size = UDim2.fromOffset(1040, 560)
 menuFrame.BackgroundColor3 = THEME.Background
 menuFrame.BorderSizePixel = 0
 menuFrame.ZIndex = 50
@@ -950,77 +907,61 @@ menuFrame.Active = true
 menuFrame.Selectable = false
 menuFrame:SetAttribute("ThemeRole", "Background")
 menuFrame.Parent = screenGui
-
-local toggleButton = Instance.new("TextButton")
-toggleButton.Name = "NameHubToggle"
-toggleButton.Size = UDim2.fromOffset(52, 52)
-toggleButton.Position = UDim2.new(0, 12, 0.5, -26)
-toggleButton.BackgroundColor3 = THEME.Accent
-toggleButton.TextColor3 = Color3.new(1, 1, 1)
-toggleButton.Font = Enum.Font.GothamBold
-toggleButton.TextSize = 14
-toggleButton.Text = "NH ▶"
-toggleButton.ZIndex = 1000
-toggleButton.AutoButtonColor = true
-toggleButton.Parent = screenGui
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(1, 0)
-toggleCorner.Parent = toggleButton
-
-local menuCorner = Instance.new("UICorner")
-menuCorner.CornerRadius = UDim.new(0, 10)
-menuCorner.Parent = menuFrame
-
 local menuStroke = Instance.new("UIStroke")
 menuStroke.Color = THEME.Stroke
 menuStroke.Thickness = 1
+menuStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 menuStroke:SetAttribute("ThemeRole", "Stroke")
 menuStroke.Parent = menuFrame
 
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "NameHubToggle"
+toggleButton.Size = UDim2.fromOffset(36, 36)
+toggleButton.Position = UDim2.new(0, 12, 0.5, -18)
+toggleButton.BackgroundColor3 = THEME.Background
+toggleButton.TextColor3 = THEME.Accent
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 12
+toggleButton.Text = "NH"
+toggleButton.ZIndex = 1000
+toggleButton.AutoButtonColor = false
+toggleButton.Parent = screenGui
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Color = THEME.Stroke
+toggleStroke.Parent = toggleButton
+
 local topbar = Instance.new("Frame")
 topbar.Name = "Topbar"
-topbar.Size = UDim2.new(1, 0, 0, 44)
+topbar.Size = UDim2.new(1, 0, 0, 46)
 topbar.BackgroundColor3 = THEME.Topbar
 topbar.BorderSizePixel = 0
 topbar.ZIndex = 51
 topbar:SetAttribute("ThemeRole", "Topbar")
 topbar.Parent = menuFrame
 
-local topbarCorner = Instance.new("UICorner")
-topbarCorner.CornerRadius = UDim.new(0, 10)
-topbarCorner.Parent = topbar
-
-local topbarFix = Instance.new("Frame")
-topbarFix.Size = UDim2.new(1, 0, 0, 14)
-topbarFix.Position = UDim2.new(0, 0, 1, -14)
-topbarFix.BackgroundColor3 = THEME.Topbar
-topbarFix.BorderSizePixel = 0
-topbarFix.ZIndex = 51
-topbarFix:SetAttribute("ThemeRole", "Topbar")
-topbarFix.Parent = topbar
-
 local titleLabel = Instance.new("TextLabel")
 titleLabel.BackgroundTransparency = 1
-titleLabel.Position = UDim2.fromOffset(14, 0)
-titleLabel.Size = UDim2.new(1, -60, 1, 0)
+titleLabel.Position = UDim2.fromOffset(16, 0)
+titleLabel.Size = UDim2.fromOffset(130, 46)
 titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Text = "NameHub · Arsenal"
-titleLabel.TextColor3 = THEME.Text
+titleLabel.Text = "NAMEHUB"
+titleLabel.TextColor3 = THEME.Accent
 titleLabel.TextSize = 16
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.ZIndex = 52
-titleLabel:SetAttribute("ThemeRole", "Text")
+titleLabel:SetAttribute("ThemeRole", "Accent")
 titleLabel.Parent = topbar
 
 local subtitleLabel = Instance.new("TextLabel")
 subtitleLabel.BackgroundTransparency = 1
-subtitleLabel.Position = UDim2.fromOffset(14, 22)
-subtitleLabel.Size = UDim2.new(1, -60, 0, 16)
+subtitleLabel.AnchorPoint = Vector2.new(1, 0.5)
+subtitleLabel.Position = UDim2.new(1, -16, 0.5, 0)
+subtitleLabel.Size = UDim2.fromOffset(80, 20)
 subtitleLabel.Font = Enum.Font.Gotham
-subtitleLabel.Text = "Studio test · RightShift = toggle · Insert = menu"
+subtitleLabel.Text = "arsenal"
 subtitleLabel.TextColor3 = THEME.SubText
-subtitleLabel.TextSize = 11
-subtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+subtitleLabel.TextSize = 12
+subtitleLabel.TextXAlignment = Enum.TextXAlignment.Right
 subtitleLabel.ZIndex = 52
 subtitleLabel:SetAttribute("ThemeRole", "SubText")
 subtitleLabel.Parent = topbar
@@ -1028,87 +969,129 @@ subtitleLabel.Parent = topbar
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "Close"
 closeButton.AnchorPoint = Vector2.new(1, 0.5)
-closeButton.Position = UDim2.new(1, -10, 0.5, 0)
+closeButton.Position = UDim2.new(1, -96, 0.5, 0)
 closeButton.Size = UDim2.fromOffset(28, 28)
-closeButton.BackgroundColor3 = THEME.Element
+closeButton.BackgroundTransparency = 1
 closeButton.BorderSizePixel = 0
 closeButton.Font = Enum.Font.GothamBold
 closeButton.Text = "X"
-closeButton.TextColor3 = THEME.Text
+closeButton.TextColor3 = THEME.SubText
 closeButton.TextSize = 12
 closeButton.ZIndex = 52
-closeButton:SetAttribute("ThemeRole", "Element")
-closeButton:SetAttribute("ThemeTextRole", "Text")
+closeButton:SetAttribute("ThemeRole", "SubText")
 closeButton.Parent = topbar
-
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 6)
-closeCorner.Parent = closeButton
 
 local tabBar = Instance.new("Frame")
 tabBar.Name = "TabBar"
-tabBar.Position = UDim2.fromOffset(10, 48)
-tabBar.Size = UDim2.new(1, -20, 0, 32)
+tabBar.Position = UDim2.fromOffset(140, 0)
+tabBar.Size = UDim2.new(1, -280, 1, 0)
 tabBar.BackgroundTransparency = 1
-tabBar.ZIndex = 51
-tabBar.Parent = menuFrame
-
+tabBar.ZIndex = 53
+tabBar.Parent = topbar
 local tabLayout = Instance.new("UIListLayout")
 tabLayout.FillDirection = Enum.FillDirection.Horizontal
-tabLayout.Padding = UDim.new(0, 6)
+tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+tabLayout.Padding = UDim.new(0, 2)
 tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 tabLayout.Parent = tabBar
 
 local pagesHost = Instance.new("Frame")
 pagesHost.Name = "PagesHost"
-pagesHost.Position = UDim2.fromOffset(0, 84)
-pagesHost.Size = UDim2.new(1, 0, 1, -92)
+pagesHost.Position = UDim2.fromOffset(0, 46)
+pagesHost.Size = UDim2.new(1, 0, 1, -68)
 pagesHost.BackgroundTransparency = 1
 pagesHost.ZIndex = 50
 pagesHost.Parent = menuFrame
 
-local pages= {}
-local tabButtons= {}
+local footer = Instance.new("TextLabel")
+footer.BackgroundTransparency = 1
+footer.AnchorPoint = Vector2.new(0, 1)
+footer.Position = UDim2.new(0, 16, 1, -8)
+footer.Size = UDim2.new(1, -32, 0, 16)
+footer.Font = Enum.Font.Gotham
+footer.TextSize = 11
+footer.TextXAlignment = Enum.TextXAlignment.Left
+footer.TextColor3 = THEME.SubText
+footer.Text = "Insert · arsenal"
+footer.ZIndex = 52
+footer:SetAttribute("ThemeRole", "SubText")
+footer.Parent = menuFrame
+
+local pages = {}
+local pageColumns = {}
+local columnCursor = {}
+local tabButtons = {}
 local tabCount = 0
-local controlsParent= nil
+local controlsParent = nil
+local currentPageId = "Main"
 local layoutOrder = 0
+local selectedTabId = "Main"
 
 local function nextOrder()
 	layoutOrder += 1
 	return layoutOrder
 end
 
+local function columnRowCount(col)
+	local count = 0
+	for _, child in col:GetChildren() do
+		if child:IsA("GuiObject") and not child:IsA("UIListLayout") and not child:IsA("UIPadding") and not child:IsA("UIStroke") then
+			count += 1
+		end
+	end
+	return count
+end
+
 local function createPage(id)
-	local page = Instance.new("ScrollingFrame")
+	local page = Instance.new("Frame")
 	page.Name = "Page_" .. id
 	page.Size = UDim2.fromScale(1, 1)
 	page.BackgroundTransparency = 1
 	page.BorderSizePixel = 0
-	page.ScrollBarThickness = 4
-	page.ScrollBarImageColor3 = THEME.Accent
-	page:SetAttribute("ThemeRole", "AccentScroll")
-	page.CanvasSize = UDim2.fromOffset(0, 0)
-	page.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	page.Visible = false
 	page.ZIndex = 50
-	page.Active = true
-	page.ScrollingEnabled = true
 	page.Parent = pagesHost
-	local pageLayout = Instance.new("UIListLayout")
-	pageLayout.Padding = UDim.new(0, 8)
-	pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	pageLayout.Parent = page
-	local pagePad = Instance.new("UIPadding")
-	pagePad.PaddingTop = UDim.new(0, 8)
-	pagePad.PaddingBottom = UDim.new(0, 12)
-	pagePad.PaddingLeft = UDim.new(0, 12)
-	pagePad.PaddingRight = UDim.new(0, 12)
-	pagePad.Parent = page
+	local cols = {}
+	for i = 1, 3 do
+		local col = Instance.new("ScrollingFrame")
+		col.Name = "Column" .. i
+		col.BackgroundColor3 = THEME.Element
+		col.BorderSizePixel = 0
+		col.ScrollBarThickness = 3
+		col.ScrollBarImageColor3 = THEME.Accent
+		col.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		col.CanvasSize = UDim2.fromOffset(0, 0)
+		col.ScrollingDirection = Enum.ScrollingDirection.Y
+		col.ScrollingEnabled = true
+		col.Active = true
+		col.ElasticBehavior = Enum.ElasticBehavior.Never
+		col.Size = UDim2.new(1 / 3, -12, 1, -12)
+		col.Position = UDim2.new((i - 1) / 3, 8, 0, 6)
+		col.ZIndex = 51
+		col:SetAttribute("ThemeRole", "Element")
+		col.Parent = page
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = THEME.Stroke
+		stroke.Thickness = 1
+		stroke:SetAttribute("ThemeRole", "Stroke")
+		stroke.Parent = col
+		local layout = Instance.new("UIListLayout")
+		layout.Padding = UDim.new(0, 4)
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Parent = col
+		local pad = Instance.new("UIPadding")
+		pad.PaddingTop = UDim.new(0, 8)
+		pad.PaddingBottom = UDim.new(0, 8)
+		pad.PaddingLeft = UDim.new(0, 10)
+		pad.PaddingRight = UDim.new(0, 10)
+		pad.Parent = col
+		cols[i] = col
+	end
+	pageColumns[id] = cols
+	columnCursor[id] = 1
 	pages[id] = page
 	return page
 end
-
-local selectedTabId = "Main"
 
 local function selectTab(id)
 	selectedTabId = id
@@ -1117,12 +1100,14 @@ local function selectTab(id)
 	end
 	for name, btn in tabButtons do
 		local active = name == id
-		btn.BackgroundColor3 = if active then THEME.Accent else THEME.Element
-		btn.TextColor3 = if active then Color3.fromRGB(255, 255, 255) else THEME.Text
-		btn:SetAttribute("ThemeRole", if active then "Accent" else "Element")
-		btn:SetAttribute("ThemeTextRole", if active then "White" else "Text")
+		btn.BackgroundTransparency = 1
+		btn.TextColor3 = if active then THEME.Text else THEME.SubText
+		local line = btn:FindFirstChild("Underline")
+		if line then
+			line.Visible = active
+			line.BackgroundColor3 = THEME.Accent
+		end
 	end
-	controlsParent = pages[id]
 end
 
 local function createTab(id, label, order)
@@ -1130,22 +1115,32 @@ local function createTab(id, label, order)
 	createPage(id)
 	local btn = Instance.new("TextButton")
 	btn.Name = "Tab_" .. id
-	btn.BackgroundColor3 = THEME.Element
+	btn.AutomaticSize = Enum.AutomaticSize.X
+	btn.Size = UDim2.fromOffset(0, 46)
+	btn.BackgroundTransparency = 1
 	btn.BorderSizePixel = 0
 	btn.Font = Enum.Font.GothamBold
-	btn.Text = label
-	btn.TextColor3 = THEME.Text
-	btn.TextSize = 10
+	btn.Text = string.upper(label)
+	btn.TextColor3 = THEME.SubText
+	btn.TextSize = 12
 	btn.AutoButtonColor = false
 	btn.LayoutOrder = order
-	btn.ZIndex = 52
-	btn:SetAttribute("ThemeRole", "Element")
-	btn:SetAttribute("ThemeTextRole", "Text")
+	btn.ZIndex = 54
 	btn.Parent = tabBar
-	local btnCorner = Instance.new("UICorner")
-	btnCorner.CornerRadius = UDim.new(0, 6)
-	btnCorner.Parent = btn
-	btn.Size = UDim2.new(1 / math.max(tabCount, 1), -4, 1, 0)
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft = UDim.new(0, 8)
+	pad.PaddingRight = UDim.new(0, 8)
+	pad.Parent = btn
+	local line = Instance.new("Frame")
+	line.Name = "Underline"
+	line.AnchorPoint = Vector2.new(0.5, 1)
+	line.Position = UDim2.new(0.5, 0, 1, 0)
+	line.Size = UDim2.new(1, -8, 0, 2)
+	line.BackgroundColor3 = THEME.Accent
+	line.BorderSizePixel = 0
+	line.Visible = false
+	line.ZIndex = 55
+	line.Parent = btn
 	tabButtons[id] = btn
 	btn.MouseButton1Click:Connect(function()
 		selectTab(id)
@@ -1159,14 +1154,7 @@ createTab("ESP", "ESP", 4)
 createTab("Movement", "Move", 5)
 createTab("Settings", "Settings", 6)
 createTab("Configs", "Configs", 7)
-
-local function refreshTabBarLayout()
-	local n = math.max(tabCount, 1)
-	for _, btn in tabButtons do
-		btn.Size = UDim2.new(1 / n, -4, 1, 0)
-	end
-end
-refreshTabBarLayout()
+selectTab("Main")
 
 local tryAutoLoadActiveConfig
 local saveNameHubProfile
@@ -1195,6 +1183,23 @@ local configProfileListHost= nil
 local configSelectedProfile = ""
 
 local function createSection(title)
+	local cols = pageColumns[currentPageId]
+	if cols then
+		local index = columnCursor[currentPageId] or 1
+		if columnRowCount(cols[index]) > 0 then
+			local best = index
+			local bestCount = columnRowCount(cols[index])
+			for i = 1, 3 do
+				local count = columnRowCount(cols[i])
+				if count < bestCount then
+					best = i
+					bestCount = count
+				end
+			end
+			columnCursor[currentPageId] = best
+		end
+		controlsParent = cols[columnCursor[currentPageId] or 1]
+	end
 	local section = Instance.new("Frame")
 	section.Name = "Section_" .. title
 	section.BackgroundTransparency = 1
@@ -1217,18 +1222,25 @@ local function createSection(title)
 end
 
 local function createElementShell(height)
+	local cols = pageColumns[currentPageId]
+	if cols then
+		local index = columnCursor[currentPageId] or 1
+		if columnRowCount(cols[index]) >= 8 then
+			local nextIndex = (index % 3) + 1
+			if columnRowCount(cols[nextIndex]) < columnRowCount(cols[index]) then
+				columnCursor[currentPageId] = nextIndex
+				controlsParent = cols[nextIndex]
+			end
+		end
+	end
 	local shell = Instance.new("Frame")
-	shell.BackgroundColor3 = THEME.Element
+	shell.BackgroundTransparency = 1
 	shell.BorderSizePixel = 0
 	shell.Size = UDim2.new(1, 0, 0, height)
 	shell.LayoutOrder = nextOrder()
 	shell.ZIndex = 51
 	shell.Active = true
-	shell:SetAttribute("ThemeRole", "Element")
 	shell.Parent = controlsParent
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = shell
 	return shell
 end
 
@@ -1293,12 +1305,11 @@ local function createActionButton(
 end
 
 local function createToggle(name, description, initial, callback)
-	local shell = createElementShell(54)
+	local shell = createElementShell(28)
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.BackgroundTransparency = 1
-	nameLabel.Position = UDim2.fromOffset(12, 8)
-	nameLabel.Size = UDim2.new(1, -70, 0, 18)
-	nameLabel.Font = Enum.Font.GothamMedium
+	nameLabel.Size = UDim2.new(1, -36, 1, 0)
+	nameLabel.Font = Enum.Font.Gotham
 	nameLabel.Text = name
 	nameLabel.TextColor3 = THEME.Text
 	nameLabel.TextSize = 13
@@ -1306,43 +1317,26 @@ local function createToggle(name, description, initial, callback)
 	nameLabel.ZIndex = 52
 	nameLabel:SetAttribute("ThemeRole", "Text")
 	nameLabel.Parent = shell
-	local descLabel = Instance.new("TextLabel")
-	descLabel.BackgroundTransparency = 1
-	descLabel.Position = UDim2.fromOffset(12, 28)
-	descLabel.Size = UDim2.new(1, -70, 0, 16)
-	descLabel.Font = Enum.Font.Gotham
-	descLabel.Text = description
-	descLabel.TextColor3 = THEME.SubText
-	descLabel.TextSize = 11
-	descLabel.TextXAlignment = Enum.TextXAlignment.Left
-	descLabel.ZIndex = 52
-	descLabel:SetAttribute("ThemeRole", "SubText")
-	descLabel.Parent = shell
 	local switch = Instance.new("Frame")
 	switch.Name = "Switch"
 	switch.AnchorPoint = Vector2.new(1, 0.5)
 	switch.Position = UDim2.new(1, -12, 0.5, 0)
-	switch.Size = UDim2.fromOffset(42, 22)
+	switch.Size = UDim2.fromOffset(14, 14)
 	switch.BackgroundColor3 = if initial then THEME.Success else Color3.fromRGB(60, 60, 65)
 	switch.BorderSizePixel = 0
 	switch.ZIndex = 54
 	switch:SetAttribute("ThemeRole", if initial then "Success" else "ToggleOff")
 	switch.Parent = shell
-	local switchCorner = Instance.new("UICorner")
-	switchCorner.CornerRadius = UDim.new(1, 0)
-	switchCorner.Parent = switch
 	local knob = Instance.new("Frame")
 	knob.Name = "Knob"
-	knob.AnchorPoint = Vector2.new(0, 0.5)
-	knob.Position = if initial then UDim2.new(1, -20, 0.5, 0) else UDim2.fromOffset(2, 11)
-	knob.Size = UDim2.fromOffset(18, 18)
-	knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	knob.AnchorPoint = Vector2.new(0.5, 0.5)
+	knob.Position = UDim2.fromScale(0.5, 0.5)
+	knob.Size = UDim2.fromOffset(8, 8)
+	knob.BackgroundColor3 = Color3.fromRGB(16, 16, 18)
 	knob.BorderSizePixel = 0
+	knob.Visible = initial
 	knob.ZIndex = 55
 	knob.Parent = switch
-	local knobCorner = Instance.new("UICorner")
-	knobCorner.CornerRadius = UDim.new(1, 0)
-	knobCorner.Parent = knob
 	-- Invisible full-row hit target (Arsenal often eats small switch clicks)
 	local hit = Instance.new("TextButton")
 	hit.Name = "Hit"
@@ -1358,7 +1352,7 @@ local function createToggle(name, description, initial, callback)
 	local function applyVisual()
 		switch.BackgroundColor3 = if state then THEME.Success else Color3.fromRGB(60, 60, 65)
 		switch:SetAttribute("ThemeRole", if state then "Success" else "ToggleOff")
-		knob.Position = if state then UDim2.new(1, -20, 0.5, 0) else UDim2.fromOffset(2, 11)
+		knob.Visible = state
 	end
 	local function fireToggle()
 		local now = os.clock()
@@ -1969,6 +1963,9 @@ local function createInputBind(
 end
 
 local function setMenuVisible(visible)
+	if uiLoading then
+		visible = false
+	end
 	menuOpen = visible
 	menuFrame.Visible = visible
 	if toggleButton then
@@ -1991,6 +1988,9 @@ closeButton.MouseButton1Click:Connect(function()
 end)
 
 toggleButton.MouseButton1Click:Connect(function()
+	if uiLoading then
+		return
+	end
 	setMenuVisible(not menuOpen)
 	notify("Menu", if menuOpen then "Opened" else "Closed")
 end)
@@ -2028,7 +2028,9 @@ do
 end
 
 local function beginPage(id)
-	controlsParent = pages[id]
+	currentPageId = id
+	columnCursor[id] = 1
+	controlsParent = pageColumns[id][1]
 	layoutOrder = 0
 end
 
@@ -2081,6 +2083,9 @@ local function applyTheme(themeName)
 				local c = colorForRole(role)
 				if c and inst.BackgroundTransparency < 1 then
 					inst.BackgroundColor3 = c
+				end
+				if inst:IsA("ScrollingFrame") then
+					inst.ScrollBarImageColor3 = THEME.Accent
 				end
 				if (inst:IsA("TextLabel") or inst:IsA("TextButton")) and inst.BackgroundTransparency >= 1 then
 					if role == "Text" or role == "SubText" or role == "White" or role == "Accent" then
@@ -5510,6 +5515,9 @@ bindConnection(UserInputService.InputBegan:Connect(function(input, gameProcessed
 	end
 	-- Menu key always works (games may mark Insert as processed)
 	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == CONFIG.MenuKey then
+		if uiLoading then
+			return
+		end
 		setMenuVisible(not menuOpen)
 		notify("Menu", if menuOpen then "Opened" else "Closed")
 		return
@@ -6328,12 +6336,17 @@ pcall(function()
 	getgenv().NameHubUnload = unloadNameHub
 end)
 
--- Show menu immediately so toggles work; loading screen is non-blocking
-setMenuVisible(true)
-notify("NameHub", "Ready — F9 console shows logs & errors")
+setMenuVisible(false)
 print("[NameHub] F9 console = diagnostics (boot info, errors, feature status)")
 task.spawn(function()
-	pcall(playNameHubLoadingScreen)
+	local ok = pcall(playNameHubLoadingScreen)
+	uiLoading = false
+	setMenuVisible(true)
+	if ok then
+		notify("NameHub", "Insert opens the menu")
+	else
+		notify("NameHub", "Ready — F9 console shows logs & errors")
+	end
 end)
 print("[NameHub] Loaded. Insert = menu · Configs tab = save/load profiles · RightShift = aim · T = silent · F = fly · N = noclip.")
 

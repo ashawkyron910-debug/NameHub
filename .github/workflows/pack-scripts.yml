@@ -27,7 +27,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add script.lua dahood/script.lua dinosim/script.lua rivals/script.lua premium/script.lua
-          for src in source/premium/script.lua source/dinosim/script.lua source/dahood/script.lua; do
+          for src in source/premium/script.lua source/dinosim/script.lua source/dahood/script.lua source/script.lua; do
             if [ -f "$src" ]; then
               git rm -f "$src"
             fi
