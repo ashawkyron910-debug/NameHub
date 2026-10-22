@@ -3,7 +3,7 @@ print("[NameHub Premium] Boot", os.date("!%Y-%m-%dT%H:%M:%SZ"))
 
 --[[
 	NameHub Premium — paid tier hub
-	Press Insert for menu · enhanced ESP + premium-only UI
+	Press Insert for menu · dark top-tab menu + ESP
 ]]
 
 local CONFIG = {
@@ -16,23 +16,23 @@ local CONFIG = {
 	ESPDistance = true,
 	ESPTracers = false,
 	ESPHealthBar = true,
-	ESPEnemyColor = Color3.fromRGB(255, 215, 0),
-	ESPFillColor = Color3.fromRGB(255, 200, 50),
-	ESPTracerColor = Color3.fromRGB(255, 215, 0),
-	ESPNameColor = Color3.fromRGB(255, 248, 220),
+	ESPEnemyColor = Color3.fromRGB(230, 55, 85),
+	ESPFillColor = Color3.fromRGB(230, 55, 85),
+	ESPTracerColor = Color3.fromRGB(230, 55, 85),
+	ESPNameColor = Color3.fromRGB(235, 235, 240),
 	ESPWatermark = true,
 }
 
 local THEME = {
-	Background = Color3.fromRGB(22, 22, 26),
-	Topbar = Color3.fromRGB(28, 28, 34),
-	Element = Color3.fromRGB(36, 36, 44),
-	Accent = Color3.fromRGB(255, 215, 0),
-	Text = Color3.fromRGB(250, 250, 252),
-	SubText = Color3.fromRGB(180, 180, 190),
-	Muted = Color3.fromRGB(130, 130, 140),
-	Border = Color3.fromRGB(60, 55, 40),
-	ToggleOff = Color3.fromRGB(55, 58, 64),
+	Window = Color3.fromRGB(16, 16, 18),
+	Top = Color3.fromRGB(12, 12, 14),
+	Panel = Color3.fromRGB(22, 22, 25),
+	Field = Color3.fromRGB(30, 30, 34),
+	Border = Color3.fromRGB(48, 48, 54),
+	Accent = Color3.fromRGB(230, 55, 85),
+	Text = Color3.fromRGB(232, 232, 236),
+	Muted = Color3.fromRGB(118, 116, 130),
+	Dim = Color3.fromRGB(72, 72, 80),
 }
 
 local KNOWN_GAMES = {
@@ -60,6 +60,7 @@ end)
 
 local scriptAlive = true
 local menuOpen = true
+local loading = true
 
 local function notify(title, detail)
 	pcall(function()
@@ -70,8 +71,6 @@ local function notify(title, detail)
 		})
 	end)
 end
-
-notify("NameHub Premium", "Loaded · " .. gameLabel() .. " · Insert for menu")
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NameHubPremiumUI"
@@ -88,17 +87,89 @@ end
 
 screenGui.Parent = resolveHudParent()
 
+local loader = Instance.new("Frame")
+loader.Name = "Loader"
+loader.AnchorPoint = Vector2.new(0.5, 0.5)
+loader.Position = UDim2.fromScale(0.5, 0.5)
+loader.Size = UDim2.fromOffset(460, 124)
+loader.BackgroundColor3 = THEME.Window
+loader.BorderSizePixel = 0
+loader.Parent = screenGui
+
+local loaderStroke = Instance.new("UIStroke")
+loaderStroke.Color = THEME.Border
+loaderStroke.Thickness = 1
+loaderStroke.Parent = loader
+
+local loaderLogo = Instance.new("TextLabel")
+loaderLogo.BackgroundTransparency = 1
+loaderLogo.Position = UDim2.fromOffset(18, 16)
+loaderLogo.Size = UDim2.fromOffset(200, 22)
+loaderLogo.Font = Enum.Font.GothamBold
+loaderLogo.TextSize = 18
+loaderLogo.TextXAlignment = Enum.TextXAlignment.Left
+loaderLogo.TextColor3 = THEME.Accent
+loaderLogo.Text = "NAMEHUB"
+loaderLogo.Parent = loader
+
+local loaderPercent = Instance.new("TextLabel")
+loaderPercent.BackgroundTransparency = 1
+loaderPercent.AnchorPoint = Vector2.new(1, 0)
+loaderPercent.Position = UDim2.new(1, -18, 0, 16)
+loaderPercent.Size = UDim2.fromOffset(80, 22)
+loaderPercent.Font = Enum.Font.GothamBold
+loaderPercent.TextSize = 18
+loaderPercent.TextXAlignment = Enum.TextXAlignment.Right
+loaderPercent.TextColor3 = THEME.Text
+loaderPercent.Text = "1%"
+loaderPercent.Parent = loader
+
+local loaderStatus = Instance.new("TextLabel")
+loaderStatus.BackgroundTransparency = 1
+loaderStatus.Position = UDim2.fromOffset(18, 44)
+loaderStatus.Size = UDim2.new(1, -36, 0, 16)
+loaderStatus.Font = Enum.Font.Gotham
+loaderStatus.TextSize = 12
+loaderStatus.TextXAlignment = Enum.TextXAlignment.Left
+loaderStatus.TextColor3 = THEME.Muted
+loaderStatus.Text = "loading"
+loaderStatus.Parent = loader
+
+local loaderTrack = Instance.new("Frame")
+loaderTrack.Position = UDim2.fromOffset(18, 78)
+loaderTrack.Size = UDim2.new(1, -36, 0, 8)
+loaderTrack.BackgroundColor3 = THEME.Field
+loaderTrack.BorderSizePixel = 0
+loaderTrack.Parent = loader
+
+local loaderFill = Instance.new("Frame")
+loaderFill.Size = UDim2.fromScale(0.01, 1)
+loaderFill.BackgroundColor3 = THEME.Accent
+loaderFill.BorderSizePixel = 0
+loaderFill.Parent = loaderTrack
+
+local loaderHint = Instance.new("TextLabel")
+loaderHint.BackgroundTransparency = 1
+loaderHint.Position = UDim2.fromOffset(18, 96)
+loaderHint.Size = UDim2.new(1, -36, 0, 16)
+loaderHint.Font = Enum.Font.Gotham
+loaderHint.TextSize = 11
+loaderHint.TextXAlignment = Enum.TextXAlignment.Left
+loaderHint.TextColor3 = THEME.Dim
+loaderHint.Text = "premium"
+loaderHint.Parent = loader
+
 local watermark = Instance.new("TextLabel")
 watermark.Name = "PremiumWatermark"
 watermark.BackgroundTransparency = 1
-watermark.Size = UDim2.new(0, 220, 0, 28)
-watermark.Position = UDim2.new(1, -228, 0, 8)
+watermark.Size = UDim2.new(0, 160, 0, 18)
+watermark.Position = UDim2.new(1, -172, 0, 8)
 watermark.Font = Enum.Font.GothamBold
-watermark.TextSize = 14
+watermark.TextSize = 13
 watermark.TextColor3 = THEME.Accent
 watermark.TextXAlignment = Enum.TextXAlignment.Right
-watermark.Text = "⭐ NameHub Premium"
-watermark.Visible = CONFIG.ESPWatermark
+watermark.Text = "NAMEHUB"
+watermark.Visible = false
 watermark.Parent = screenGui
 
 local espFolder = Instance.new("Folder")
@@ -109,15 +180,11 @@ local mainFrame = Instance.new("Frame")
 mainFrame.Name = "Main"
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 mainFrame.Position = UDim2.fromScale(0.5, 0.5)
-mainFrame.Size = UDim2.new(0, 360, 0, 420)
-mainFrame.BackgroundColor3 = THEME.Background
+mainFrame.Size = UDim2.fromOffset(740, 430)
+mainFrame.BackgroundColor3 = THEME.Window
 mainFrame.BorderSizePixel = 0
-mainFrame.Visible = menuOpen
+mainFrame.Visible = false
 mainFrame.Parent = screenGui
-
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 10)
-mainCorner.Parent = mainFrame
 
 local mainStroke = Instance.new("UIStroke")
 mainStroke.Color = THEME.Border
@@ -126,150 +193,418 @@ mainStroke.Parent = mainFrame
 
 local topbar = Instance.new("Frame")
 topbar.Name = "Topbar"
-topbar.Size = UDim2.new(1, 0, 0, 44)
-topbar.BackgroundColor3 = THEME.Topbar
+topbar.Size = UDim2.new(1, 0, 0, 46)
+topbar.BackgroundColor3 = THEME.Top
 topbar.BorderSizePixel = 0
 topbar.Parent = mainFrame
 
-local topCorner = Instance.new("UICorner")
-topCorner.CornerRadius = UDim.new(0, 10)
-topCorner.Parent = topbar
+local logo = Instance.new("TextLabel")
+logo.BackgroundTransparency = 1
+logo.Size = UDim2.fromOffset(110, 46)
+logo.Position = UDim2.fromOffset(14, 0)
+logo.Font = Enum.Font.GothamBold
+logo.TextSize = 16
+logo.TextXAlignment = Enum.TextXAlignment.Left
+logo.TextColor3 = THEME.Accent
+logo.Text = "NAMEHUB"
+logo.Parent = topbar
 
-local topFix = Instance.new("Frame")
-topFix.Size = UDim2.new(1, 0, 0, 12)
-topFix.Position = UDim2.new(0, 0, 1, -12)
-topFix.BackgroundColor3 = THEME.Topbar
-topFix.BorderSizePixel = 0
-topFix.Parent = topbar
+local tabNames = { "VISUALS", "PLAYER", "MISC" }
+local tabButtons = {}
+local pages = {}
+local activeTab = "VISUALS"
 
-local title = Instance.new("TextLabel")
-title.BackgroundTransparency = 1
-title.Size = UDim2.new(1, -16, 1, 0)
-title.Position = UDim2.new(0, 12, 0, 0)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 16
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.TextColor3 = THEME.Accent
-title.Text = "NameHub Premium · " .. gameLabel()
-title.Parent = topbar
+local function selectTab(name)
+	activeTab = name
+	for tabName, button in pairs(tabButtons) do
+		local on = tabName == name
+		button.Label.TextColor3 = on and THEME.Text or THEME.Muted
+		button.Underline.Visible = on
+	end
+	for pageName, page in pairs(pages) do
+		page.Visible = pageName == name
+	end
+end
 
-local scroll = Instance.new("ScrollingFrame")
-scroll.Name = "Scroll"
-scroll.Size = UDim2.new(1, -20, 1, -56)
-scroll.Position = UDim2.new(0, 10, 0, 50)
-scroll.BackgroundTransparency = 1
-scroll.BorderSizePixel = 0
-scroll.ScrollBarThickness = 4
-scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-scroll.Parent = mainFrame
+local tabX = 124
+for _, name in ipairs(tabNames) do
+	local hit = Instance.new("TextButton")
+	hit.Name = name
+	hit.BackgroundTransparency = 1
+	hit.AutoButtonColor = false
+	hit.Text = ""
+	hit.Size = UDim2.fromOffset(88, 46)
+	hit.Position = UDim2.fromOffset(tabX, 0)
+	hit.Parent = topbar
 
-local list = Instance.new("UIListLayout")
-list.Padding = UDim.new(0, 8)
-list.SortOrder = Enum.SortOrder.LayoutOrder
-list.Parent = scroll
+	local label = Instance.new("TextLabel")
+	label.Name = "Label"
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(1, 0, 1, -2)
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 13
+	label.TextColor3 = THEME.Muted
+	label.Text = name
+	label.Parent = hit
 
-local function makeToggle(label, getValue, setValue)
-	local row = Instance.new("Frame")
-	row.Size = UDim2.new(1, -4, 0, 36)
-	row.BackgroundColor3 = THEME.Element
-	row.BorderSizePixel = 0
-	row.Parent = scroll
+	local underline = Instance.new("Frame")
+	underline.Name = "Underline"
+	underline.AnchorPoint = Vector2.new(0.5, 1)
+	underline.Position = UDim2.new(0.5, 0, 1, 0)
+	underline.Size = UDim2.fromOffset(52, 2)
+	underline.BackgroundColor3 = THEME.Accent
+	underline.BorderSizePixel = 0
+	underline.Visible = false
+	underline.Parent = hit
 
-	local rowCorner = Instance.new("UICorner")
-	rowCorner.CornerRadius = UDim.new(0, 8)
-	rowCorner.Parent = row
+	tabButtons[name] = { Label = label, Underline = underline }
+	hit.MouseButton1Click:Connect(function()
+		selectTab(name)
+	end)
+	tabX += 90
+end
 
-	local lbl = Instance.new("TextLabel")
-	lbl.BackgroundTransparency = 1
-	lbl.Size = UDim2.new(1, -70, 1, 0)
-	lbl.Position = UDim2.new(0, 12, 0, 0)
-	lbl.Font = Enum.Font.Gotham
-	lbl.TextSize = 14
-	lbl.TextXAlignment = Enum.TextXAlignment.Left
-	lbl.TextColor3 = THEME.Text
-	lbl.Text = label
-	lbl.Parent = row
+local buildTag = Instance.new("TextLabel")
+buildTag.BackgroundTransparency = 1
+buildTag.AnchorPoint = Vector2.new(1, 0.5)
+buildTag.Position = UDim2.new(1, -16, 0.5, 0)
+buildTag.Size = UDim2.fromOffset(180, 18)
+buildTag.Font = Enum.Font.Gotham
+buildTag.TextSize = 12
+buildTag.TextXAlignment = Enum.TextXAlignment.Right
+buildTag.TextColor3 = THEME.Muted
+buildTag.Text = "premium"
+buildTag.Parent = topbar
 
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 46, 0, 24)
-	btn.Position = UDim2.new(1, -54, 0.5, -12)
-	btn.BackgroundColor3 = THEME.ToggleOff
-	btn.Text = ""
-	btn.AutoButtonColor = false
-	btn.Parent = row
+local body = Instance.new("Frame")
+body.Name = "Body"
+body.Position = UDim2.fromOffset(0, 46)
+body.Size = UDim2.new(1, 0, 1, -74)
+body.BackgroundTransparency = 1
+body.Parent = mainFrame
 
-	local btnCorner = Instance.new("UICorner")
-	btnCorner.CornerRadius = UDim.new(1, 0)
-	btnCorner.Parent = btn
+local function makePage(name)
+	local page = Instance.new("Frame")
+	page.Name = name
+	page.Size = UDim2.fromScale(1, 1)
+	page.BackgroundTransparency = 1
+	page.Visible = false
+	page.Parent = body
+	pages[name] = page
+	return page
+end
 
-	local knob = Instance.new("Frame")
-	knob.Size = UDim2.new(0, 20, 0, 20)
-	knob.Position = UDim2.new(0, 2, 0.5, -10)
-	knob.BackgroundColor3 = THEME.Text
-	knob.BorderSizePixel = 0
-	knob.Parent = btn
+local function makeGroup(parent, title, x, width)
+	local panel = Instance.new("Frame")
+	panel.Position = UDim2.fromOffset(x, 12)
+	panel.Size = UDim2.new(0, width, 1, -24)
+	panel.BackgroundColor3 = THEME.Panel
+	panel.BorderSizePixel = 0
+	panel.Parent = parent
 
-	local knobCorner = Instance.new("UICorner")
-	knobCorner.CornerRadius = UDim.new(1, 0)
-	knobCorner.Parent = knob
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = THEME.Border
+	stroke.Thickness = 1
+	stroke.Parent = panel
+
+	local header = Instance.new("TextLabel")
+	header.BackgroundTransparency = 1
+	header.Position = UDim2.fromOffset(12, 8)
+	header.Size = UDim2.new(1, -24, 0, 16)
+	header.Font = Enum.Font.Gotham
+	header.TextSize = 11
+	header.TextXAlignment = Enum.TextXAlignment.Left
+	header.TextColor3 = THEME.Muted
+	header.Text = string.upper(title)
+	header.Parent = panel
+
+	local rule = Instance.new("Frame")
+	rule.Position = UDim2.fromOffset(12, 28)
+	rule.Size = UDim2.new(1, -24, 0, 1)
+	rule.BackgroundColor3 = THEME.Border
+	rule.BorderSizePixel = 0
+	rule.Parent = panel
+
+	local holder = Instance.new("Frame")
+	holder.BackgroundTransparency = 1
+	holder.Position = UDim2.fromOffset(12, 38)
+	holder.Size = UDim2.new(1, -24, 1, -50)
+	holder.Parent = panel
+
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 8)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = holder
+	return holder
+end
+
+local function checkbox(parent, text, getValue, setValue)
+	local row = Instance.new("TextButton")
+	row.Size = UDim2.new(1, 0, 0, 22)
+	row.BackgroundTransparency = 1
+	row.AutoButtonColor = false
+	row.Text = ""
+	row.Parent = parent
+
+	local box = Instance.new("Frame")
+	box.AnchorPoint = Vector2.new(1, 0.5)
+	box.Position = UDim2.new(1, 0, 0.5, 0)
+	box.Size = UDim2.fromOffset(14, 14)
+	box.BackgroundColor3 = THEME.Field
+	box.BorderSizePixel = 0
+	box.Parent = row
+
+	local boxStroke = Instance.new("UIStroke")
+	boxStroke.Color = THEME.Dim
+	boxStroke.Thickness = 1
+	boxStroke.Parent = box
+
+	local mark = Instance.new("Frame")
+	mark.AnchorPoint = Vector2.new(0.5, 0.5)
+	mark.Position = UDim2.fromScale(0.5, 0.5)
+	mark.Size = UDim2.fromOffset(8, 8)
+	mark.BackgroundColor3 = THEME.Accent
+	mark.BorderSizePixel = 0
+	mark.Parent = box
+
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(1, -24, 1, 0)
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 13
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextColor3 = THEME.Text
+	label.Text = text
+	label.Parent = row
 
 	local function paint()
 		local on = getValue()
-		btn.BackgroundColor3 = on and THEME.Accent or THEME.ToggleOff
-		knob.Position = on and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+		mark.Visible = on
+		boxStroke.Color = on and THEME.Accent or THEME.Dim
 	end
 
-	btn.MouseButton1Click:Connect(function()
+	row.MouseButton1Click:Connect(function()
 		setValue(not getValue())
 		paint()
 	end)
 	paint()
 end
 
-makeToggle("ESP boxes", function()
+local function slider(parent, text, minValue, maxValue, getValue, setValue)
+	local wrap = Instance.new("Frame")
+	wrap.Size = UDim2.new(1, 0, 0, 36)
+	wrap.BackgroundTransparency = 1
+	wrap.Parent = parent
+
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(1, -52, 0, 16)
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 13
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextColor3 = THEME.Text
+	label.Text = text
+	label.Parent = wrap
+
+	local valueLabel = Instance.new("TextLabel")
+	valueLabel.BackgroundTransparency = 1
+	valueLabel.AnchorPoint = Vector2.new(1, 0)
+	valueLabel.Position = UDim2.new(1, 0, 0, 0)
+	valueLabel.Size = UDim2.fromOffset(52, 16)
+	valueLabel.Font = Enum.Font.Gotham
+	valueLabel.TextSize = 12
+	valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+	valueLabel.TextColor3 = THEME.Muted
+	valueLabel.Parent = wrap
+
+	local track = Instance.new("TextButton")
+	track.Position = UDim2.fromOffset(0, 22)
+	track.Size = UDim2.new(1, 0, 0, 8)
+	track.BackgroundColor3 = THEME.Field
+	track.AutoButtonColor = false
+	track.Text = ""
+	track.Parent = wrap
+
+	local fill = Instance.new("Frame")
+	fill.Size = UDim2.fromScale(0, 1)
+	fill.BackgroundColor3 = THEME.Accent
+	fill.BorderSizePixel = 0
+	fill.Parent = track
+
+	local function paint(value)
+		local alpha = (value - minValue) / (maxValue - minValue)
+		fill.Size = UDim2.fromScale(math.clamp(alpha, 0, 1), 1)
+		valueLabel.Text = tostring(math.floor(value))
+	end
+
+	local function setFromX(x)
+		local relative = math.clamp((x - track.AbsolutePosition.X) / math.max(track.AbsoluteSize.X, 1), 0, 1)
+		local value = minValue + (maxValue - minValue) * relative
+		setValue(value)
+		paint(value)
+	end
+
+	local draggingSlider = false
+	track.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			draggingSlider = true
+			setFromX(input.Position.X)
+		end
+	end)
+	track.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			draggingSlider = false
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
+			setFromX(input.Position.X)
+		end
+	end)
+	paint(getValue())
+end
+
+local visuals = makePage("VISUALS")
+local overlay = makeGroup(visuals, "Overlay", 14, 222)
+local info = makeGroup(visuals, "Info", 248, 222)
+local range = makeGroup(visuals, "Range", 482, 244)
+
+checkbox(overlay, "Boxes", function()
 	return CONFIG.ESPBoxes
 end, function(v)
 	CONFIG.ESPBoxes = v
 end)
-
-makeToggle("ESP names", function()
+checkbox(overlay, "Names", function()
 	return CONFIG.ESPNames
 end, function(v)
 	CONFIG.ESPNames = v
 end)
-
-makeToggle("ESP distance", function()
+checkbox(overlay, "Distance", function()
 	return CONFIG.ESPDistance
 end, function(v)
 	CONFIG.ESPDistance = v
 end)
 
-makeToggle("ESP tracers", function()
+checkbox(info, "Tracers", function()
 	return CONFIG.ESPTracers
 end, function(v)
 	CONFIG.ESPTracers = v
 end)
-
-makeToggle("Premium watermark", function()
+checkbox(info, "Watermark", function()
 	return CONFIG.ESPWatermark
 end, function(v)
 	CONFIG.ESPWatermark = v
 	watermark.Visible = v
 end)
 
-local hint = Instance.new("TextLabel")
-hint.BackgroundTransparency = 1
-hint.Size = UDim2.new(1, -4, 0, 48)
-hint.Font = Enum.Font.Gotham
-hint.TextSize = 12
-hint.TextWrapped = true
-hint.TextColor3 = THEME.SubText
-hint.Text = "Premium builds get updates here first. Discord: " .. CONFIG.DiscordInviteUrl
-hint.Parent = scroll
+slider(range, "Max distance", 100, 2000, function()
+	return CONFIG.ESPMaxDistance
+end, function(v)
+	CONFIG.ESPMaxDistance = v
+end)
+
+local playerPage = makePage("PLAYER")
+local who = makeGroup(playerPage, "Session", 14, 340)
+
+local function staticRow(parent, text)
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(1, 0, 0, 20)
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 13
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextColor3 = THEME.Text
+	label.Text = text
+	label.Parent = parent
+end
+
+staticRow(who, "Game   " .. gameLabel())
+staticRow(who, "User   " .. localPlayer.DisplayName)
+staticRow(who, "Place  " .. tostring(game.PlaceId))
+
+local misc = makePage("MISC")
+local actions = makeGroup(misc, "General", 14, 340)
+
+local function actionButton(parent, text, callback)
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, 0, 0, 28)
+	button.BackgroundColor3 = THEME.Field
+	button.AutoButtonColor = false
+	button.Font = Enum.Font.Gotham
+	button.TextSize = 13
+	button.TextColor3 = THEME.Text
+	button.Text = text
+	button.Parent = parent
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = THEME.Border
+	stroke.Parent = button
+	button.MouseButton1Click:Connect(callback)
+end
+
+actionButton(actions, "Copy Discord invite", function()
+	local copied = false
+	pcall(function()
+		if setclipboard then
+			setclipboard(CONFIG.DiscordInviteUrl)
+			copied = true
+		end
+	end)
+	notify("NameHub", copied and "Discord invite copied." or CONFIG.DiscordInviteUrl)
+end)
+
+actionButton(actions, "Unload", function()
+	if typeof(getgenv().NameHubPremiumUnload) == "function" then
+		getgenv().NameHubPremiumUnload()
+	end
+end)
+
+local footer = Instance.new("Frame")
+footer.Position = UDim2.new(0, 0, 1, -28)
+footer.Size = UDim2.new(1, 0, 0, 28)
+footer.BackgroundTransparency = 1
+footer.Parent = mainFrame
+
+local footerText = Instance.new("TextLabel")
+footerText.BackgroundTransparency = 1
+footerText.Position = UDim2.fromOffset(14, 0)
+footerText.Size = UDim2.new(1, -28, 1, 0)
+footerText.Font = Enum.Font.Gotham
+footerText.TextSize = 12
+footerText.TextXAlignment = Enum.TextXAlignment.Left
+footerText.TextColor3 = THEME.Dim
+footerText.Text = "Insert  ·  " .. gameLabel()
+footerText.Parent = footer
+
+selectTab("VISUALS")
+
+local dragging = false
+local dragStart = Vector2.zero
+local frameStart = Vector2.zero
+topbar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = Vector2.new(input.Position.X, input.Position.Y)
+		frameStart = Vector2.new(mainFrame.AbsolutePosition.X, mainFrame.AbsolutePosition.Y)
+	end
+end)
+topbar.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStart
+		mainFrame.AnchorPoint = Vector2.zero
+		mainFrame.Position = UDim2.fromOffset(frameStart.X + delta.X, frameStart.Y + delta.Y)
+	end
+end)
 
 UserInputService.InputBegan:Connect(function(input, processed)
 	if processed then
+		return
+	end
+	if loading then
 		return
 	end
 	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == CONFIG.MenuKey then
@@ -408,6 +743,25 @@ local function updateEsp()
 			entry.name.Visible = false
 		end
 
+		if CONFIG.ESPTracers then
+			if not entry.tracer then
+				local line = Instance.new("Frame")
+				line.AnchorPoint = Vector2.new(0, 0.5)
+				line.BorderSizePixel = 0
+				line.BackgroundColor3 = CONFIG.ESPTracerColor
+				line.Parent = espFolder
+				entry.tracer = line
+			end
+			local origin = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+			local delta = Vector2.new(sFoot.X, sFoot.Y) - origin
+			entry.tracer.Size = UDim2.fromOffset(delta.Magnitude, 1)
+			entry.tracer.Position = UDim2.fromOffset(origin.X, origin.Y)
+			entry.tracer.Rotation = math.deg(math.atan2(delta.Y, delta.X))
+			entry.tracer.Visible = true
+		elseif entry.tracer then
+			entry.tracer.Visible = false
+		end
+
 		if CONFIG.ESPDistance then
 			if not entry.dist then
 				local lbl = Instance.new("TextLabel")
@@ -450,6 +804,34 @@ local function unload()
 end
 
 getgenv().NameHubPremiumUnload = unload
+
+task.spawn(function()
+	for percent = 1, 100 do
+		if not scriptAlive or not loader.Parent then
+			return
+		end
+		loaderPercent.Text = percent .. "%"
+		loaderFill.Size = UDim2.fromScale(percent / 100, 1)
+		if percent < 35 then
+			loaderStatus.Text = "loading"
+		elseif percent < 70 then
+			loaderStatus.Text = "preparing visuals"
+		elseif percent < 100 then
+			loaderStatus.Text = "starting"
+		else
+			loaderStatus.Text = "ready"
+		end
+		task.wait(0.018)
+	end
+	if not scriptAlive then
+		return
+	end
+	loading = false
+	loader:Destroy()
+	watermark.Visible = CONFIG.ESPWatermark
+	mainFrame.Visible = menuOpen
+	notify("NameHub Premium", "Loaded · " .. gameLabel() .. " · Insert for menu")
+end)
 
 Players.PlayerRemoving:Connect(function(player)
 	local char = player.Character
