@@ -50,8 +50,8 @@ jobs:
               "source/dinosim/script.lua": "🦖 **Dino Sim** — source",
               "rivals/script.lua": "⚔️ **Rivals** — free",
               "source/rivals/script.lua": "⚔️ **Rivals** — source",
-              "animeastral/commandments.lua": "✨ **Astral Commandments** — free",
-              "source/animeastral/commandments.lua": "✨ **Astral Commandments** — source",
+              "animeastral/commandments.lua": "✨ **Anime Astral Auto Farm** — free",
+              "source/animeastral/commandments.lua": "✨ **Anime Astral Auto Farm** — source",
               "premium/script.lua": "⭐ **Premium Hub** — release build",
               "source/premium/script.lua": "⭐ **Premium Hub** — source publish",
           }
