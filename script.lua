@@ -1,13 +1,58 @@
 -- NameHub protected build (do not edit)
+warn("[NameHub] starting")
 return (function(K)
-  local bit32 = bit32 or bit
+  local bxor = (bit32 and bit32.bxor) or (bit and bit.bxor)
+  if not bxor then
+    function bxor(a, b)
+      local r, p = 0, 1
+      for _ = 1, 8 do
+        if a % 2 ~= b % 2 then
+          r = r + p
+        end
+        a = math.floor(a / 2)
+        b = math.floor(b / 2)
+        p = p * 2
+      end
+      return r
+    end
+  end
   local function xor_bytes(data, key)
     local out = {}
     local klen = #key
     for i = 1, #data do
       local b = string.byte(data, i)
       local kb = string.byte(key, ((i - 1) % klen) + 1)
-      out[i] = string.char(bit32.bxor(b, kb))
+      out[i] = string.char(bxor(b, kb))
+    end
+    return table.concat(out)
+  end
+  local function b64decode(data)
+    local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local map = {}
+    for i = 1, #chars do
+      map[string.sub(chars, i, i)] = i - 1
+    end
+    data = string.gsub(data, "%s", "")
+    local out = {}
+    local n = 1
+    for i = 1, #data, 4 do
+      local a = map[string.sub(data, i, i)] or 0
+      local b = map[string.sub(data, i + 1, i + 1)] or 0
+      local cch = string.sub(data, i + 2, i + 2)
+      local dch = string.sub(data, i + 3, i + 3)
+      local c = map[cch]
+      local d = map[dch]
+      local triple = a * 262144 + b * 4096 + (c or 0) * 64 + (d or 0)
+      out[n] = string.char(math.floor(triple / 65536) % 256)
+      n = n + 1
+      if cch ~= "=" and c ~= nil then
+        out[n] = string.char(math.floor(triple / 256) % 256)
+        n = n + 1
+      end
+      if dch ~= "=" and d ~= nil then
+        out[n] = string.char(triple % 256)
+        n = n + 1
+      end
     end
     return table.concat(out)
   end
@@ -73,12 +118,20 @@ return (function(K)
   "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"
   })
-  local raw = game:GetService("HttpService"):Base64Decode(b64)
-  local src = xor_bytes(raw, K)
-  local loader = loadstring or load
-  local fn, err = loader(src)
-  if not fn then
-    error("NameHub load failed: " .. tostring(err))
+  local ok, err = pcall(function()
+    local raw = b64decode(b64)
+    local src = xor_bytes(raw, K)
+    local loader = loadstring or load
+    if type(loader) ~= "function" then
+      error("loadstring is missing")
+    end
+    local fn, loadErr = loader(src)
+    if not fn then
+      error(tostring(loadErr))
+    end
+    fn()
+  end)
+  if not ok then
+    warn("[NameHub] load failed: " .. tostring(err))
   end
-  return fn()
 end)("NameHub-2026")
