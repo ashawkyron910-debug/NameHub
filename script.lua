@@ -75,7 +75,8 @@ return (function(K)
   })
   local raw = game:GetService("HttpService"):Base64Decode(b64)
   local src = xor_bytes(raw, K)
-  local fn, err = loadstring(src)
+  local loader = loadstring or load
+  local fn, err = loader(src)
   if not fn then
     error("NameHub load failed: " .. tostring(err))
   end
