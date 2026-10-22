@@ -20,64 +20,183 @@ jobs:
           import json
           import os
           import urllib.request
+          from datetime import datetime, timezone
 
           event_path = os.environ["GITHUB_EVENT_PATH"]
           with open(event_path, encoding="utf-8") as f:
               event = json.load(f)
 
           head = event.get("head_commit") or {}
-          sha = str(head.get("id") or "")[:12]
-          message = str(head.get("message") or "Script update").splitlines()[0][:256]
+          sha_full = str(head.get("id") or "")
+          sha = sha_full[:12]
+          message = str(head.get("message") or "Update").strip()
+          title_line = message.splitlines()[0][:200] if message else "Update"
           author = (head.get("author") or {}).get("username") or "GitHub"
           url = head.get("url") or event.get("compare") or ""
-
-          games = {
-              "script.lua": "🔫 Arsenal",
-              "dahood/script.lua": "🏚️ Da Hood",
-              "dinosim/script.lua": "🦖 Dino Sim",
-              "rivals/script.lua": "⚔️ Rivals",
-          }
-          touched = []
-          for commit in event.get("commits") or []:
-              for key in ("modified", "added", "removed"):
-                  for path in commit.get(key) or []:
-                      for suffix, label in games.items():
-                          if path == suffix or path.endswith("/" + suffix):
-                              if label not in touched:
-                                  touched.append(label)
-          if not touched:
-              touched = ["📜 NameHub scripts"]
 
           files = []
           for commit in event.get("commits") or []:
               for key in ("modified", "added", "removed"):
                   for path in commit.get(key) or []:
-                      if path not in files:
+                      if path and path not in files:
                           files.append(path)
-          file_block = "\n".join(f"- `{p}`" for p in files[:8])
-          if len(files) > 8:
-              file_block += f"\n- _+{len(files) - 8} more_"
+
+          labels = {
+              "script.lua": "🔫 **Arsenal** — free loader",
+              "source/script.lua": "🔫 **Arsenal** — source",
+              "dahood/script.lua": "🏚️ **Da Hood** — free",
+              "source/dahood/script.lua": "🏚️ **Da Hood** — source",
+              "dinosim/script.lua": "🦖 **Dino Sim** — free",
+              "source/dinosim/script.lua": "🦖 **Dino Sim** — source",
+              "rivals/script.lua": "⚔️ **Rivals** — free",
+              "source/rivals/script.lua": "⚔️ **Rivals** — source",
+              "premium/script.lua": "⭐ **Premium Hub** — release build",
+              "source/premium/script.lua": "⭐ **Premium Hub** — source publish",
+          }
+          touched = []
+          for path in files:
+              norm = path.replace("\\", "/")
+              for key, label in labels.items():
+                  if norm == key or norm.endswith("/" + key):
+                      if label not in touched:
+                          touched.append(label)
+                      break
+
+          lower = title_line.lower()
+          paths_blob = " ".join(files).lower()
+          staff = "discord bot" in lower or "via namehub discord" in lower
+          staff_line = (
+              "\n\n🤖 **Live from Discord** — staff used **`/scripts-publish`** (or unpublish) on the NameHub bot."
+              if staff
+              else ""
+          )
+
+          if "unpublish" in lower or "maintenance stub" in lower:
+              kind, color, banner = "maintenance", 0xED4245, "🛠 NameHub · Script maintenance"
+          elif "premium" in lower or "premium/" in paths_blob:
+              kind, color, banner = "premium", 0xFFD700, "⭐ NameHub · Premium update"
+          elif "pack" in lower or lower.startswith("build:"):
+              kind, color, banner = "pack", 0x57F287, "🔒 NameHub · Protected build"
+          elif "publish" in lower:
+              kind, color, banner = "publish", 0x3DDCFF, "🚀 NameHub · Published to GitHub"
+          else:
+              kind, color, banner = "update", 0x3DDCFF, "✨ NameHub · Script update"
+
+          kind_names = {
+              "premium": "⭐ Premium Hub",
+              "pack": "🔒 Protected release rebuild",
+              "publish": "🚀 Source publish",
+              "maintenance": "🛠 Maintenance / offline",
+              "update": "✨ General script update",
+          }
+
+          if not touched:
+              if kind == "premium":
+                  touched = ["⭐ **Premium Hub**"]
+              elif files:
+                  touched = ["📜 **Scripts** — see files below"]
+              else:
+                  touched = ["📜 **NameHub**"]
+
+          if kind == "premium":
+              explain = (
+                  "The **Premium Hub** on GitHub changed. Anyone with **⭐ Premium** should pull a "
+                  "**new loadstring** after the pack job (if source was pushed). Same subscription, new build."
+                  + staff_line
+              )
+              next_steps = (
+                  "🤖 Staff publish — allow ~1–2 min for pack workflow.\n"
+                  if staff
+                  else ""
+              ) + (
+                  "1. Executor **Updated** on WEAO (#🧩┃supported-executors).\n"
+                  "2. **Get Premium Loader** in 💳┃prem-paid.\n"
+                  "3. Copy fresh loadstring (`?v=` cache bust)."
+              )
+          elif kind == "pack":
+              explain = (
+                  "Obfuscated **release** files were rebuilt. URLs change — use **Get Loader** again."
+                  + staff_line
+              )
+              next_steps = (
+                  "1. Grab a **new** loadstring (do not reuse old tabs).\n"
+                  "2. Rejoin the game if needed.\n"
+                  "3. Check WEAO if injection fails."
+              )
+          elif kind == "maintenance":
+              explain = (
+                  "A script is on **maintenance stub** until staff publish again."
+                  + staff_line
+              )
+              next_steps = (
+                  "1. Expect maintenance warning in-game.\n"
+                  "2. Watch #📢┃updates for the all-clear.\n"
+                  "3. Premium keys remain valid."
+              )
+          elif kind == "publish":
+              explain = (
+                  "New **source** on **main** — free games via loader; Premium via prem-paid after pack."
+                  + staff_line
+              )
+              next_steps = (
+                  "1. Free → #📜┃loader → **Get Loader**.\n"
+                  "2. Premium → 💳┃prem-paid → **Get Premium Loader**.\n"
+                  "3. Wait ~1–2 min after source-only pushes."
+              )
+          else:
+              explain = (
+                  "Script files on **main** changed. Use loader panels after WEAO shows **Updated**."
+                  + staff_line
+              )
+              next_steps = (
+                  "1. **Get Loader** or **Get Premium Loader**.\n"
+                  "2. Paste new loadstring.\n"
+                  "3. Open commit on GitHub for details."
+              )
+
+          file_lines = "\n".join(f"• `{p}`" for p in files[:10])
+          if len(files) > 10:
+              file_lines += f"\n• _+{len(files) - 10} more on GitHub_"
 
           embed = {
-              "title": "📢 Script update",
-              "description": message,
-              "color": 0x3DDCFF,
+              "author": {
+                  "name": "NameHub · Discord staff" if staff else "NameHub · GitHub main",
+              },
+              "title": banner,
+              "description": f"> **{title_line}**\n\n{explain}",
+              "color": color,
               "url": url or None,
+              "timestamp": datetime.now(timezone.utc).isoformat(),
               "fields": [
-                  {"name": "Games", "value": "\n".join(touched), "inline": True},
-                  {"name": "Commit", "value": f"[`{sha}`]({url})" if url else f"`{sha}`", "inline": True},
-                  {"name": "Author", "value": author, "inline": True},
+                  {"name": "🏷 Update type", "value": kind_names.get(kind, kind), "inline": True},
+                  {"name": "🌿 Branch", "value": "`main`", "inline": True},
+                  {"name": "📦 What changed", "value": "\n".join(touched), "inline": False},
+                  {"name": "✅ What to do next", "value": next_steps, "inline": False},
+                  {
+                      "name": "🎮 Loader channels",
+                      "value": (
+                          "**Free** → #📜┃loader → **Get Loader**\n"
+                          "**Premium** → 💳┃prem-paid → **Get Premium Loader**\n"
+                          "Executor **Updated** on #🧩┃supported-executors (WEAO)."
+                      ),
+                      "inline": False,
+                  },
               ],
-              "footer": {"text": "NameHub · GitHub"},
+              "footer": {"text": f"NameHub Updates · {sha}"},
           }
-          if file_block:
-              embed["fields"].append(
-                  {"name": "Files changed", "value": file_block, "inline": False}
+          if file_lines:
+              embed["fields"].insert(
+                  3,
+                  {"name": "📁 Files on this push", "value": file_lines, "inline": False},
               )
           embed["fields"].append(
               {
-                  "name": "Get scripts",
-                  "value": "Use **Get Loader** in the loader channel when your executor is **Updated** on WEAO.",
+                  "name": "🔗 Commit",
+                  "value": (
+                      f"[`{sha}`]({url}) · by **{author}**"
+                      if url
+                      else f"`{sha}` · **{author}**"
+                  ),
                   "inline": False,
               }
           )
