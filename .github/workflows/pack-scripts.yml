@@ -26,7 +26,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add script.lua dahood/script.lua dinosim/script.lua rivals/script.lua
+          git add script.lua dahood/script.lua dinosim/script.lua rivals/script.lua premium/script.lua
           if git diff --staged --quiet; then
             echo "No packed output changes."
             exit 0

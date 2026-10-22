@@ -15,6 +15,7 @@ OUTPUTS: tuple[tuple[str, str], ...] = (
     ("dahood/script.lua", "dahood/script.lua"),
     ("dinosim/script.lua", "dinosim/script.lua"),
     ("rivals/script.lua", "rivals/script.lua"),
+    ("premium/script.lua", "premium/script.lua"),
 )
 
 DEFAULT_KEY = "NameHub-2026"
