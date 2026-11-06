@@ -16,6 +16,7 @@ OUTPUTS: tuple[tuple[str, str], ...] = (
     ("dinosim/script.lua", "dinosim/script.lua"),
     ("rivals/script.lua", "rivals/script.lua"),
     ("animeastral/commandments.lua", "animeastral/commandments.lua"),
+    ("bloxstrike/script.lua", "bloxstrike/script.lua"),
     ("premium/script.lua", "premium/script.lua"),
 )
 
